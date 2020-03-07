@@ -1,0 +1,96 @@
+﻿<UserControl x:Class="Proizvodnja.Views.MasineURadu"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:prism="http://prismlibrary.com/"             
+             prism:ViewModelLocator.AutoWireViewModel="True">
+    <Grid>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+      <ItemsControl ItemsSource="{Binding Path=MasineURadu}" HorizontalContentAlignment="Stretch">
+      <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            
+            <Border  BorderThickness="2" BorderBrush="DarkGreen" >
+              
+             <StackPanel Orientation="Horizontal">
+                <Border BorderBrush="{x:Null}"  Width="40" Background="AliceBlue">
+                  <Viewbox>
+                  <TextBlock Text="{Binding Path=MasinaNaziv}"  Padding="1,0" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" >
+                    <TextBlock.LayoutTransform>
+                      <RotateTransform Angle="-90"/>
+                    </TextBlock.LayoutTransform>
+                  </TextBlock>
+                </Viewbox>
+                </Border>
+
+                <StackPanel Orientation="Horizontal" >
+                <ListBox ItemsSource="{Binding Path=NaloziURadu}" >
+                  <ListBox.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal"/>
+                  </ItemsPanelTemplate>
+                  </ListBox.ItemsPanel>
+                <ListBox.ItemTemplate>
+                  <DataTemplate>
+                    <Grid Width="450">
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" MinWidth="50"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                      </Grid.ColumnDefinitions>
+                      <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                      </Grid.RowDefinitions>
+                                            
+                      <TextBlock Grid.Row="2" Grid.Column="0" Text="Nalog"/>
+                      <TextBlock Grid.Row="3" Grid.Column="0" Text="Artikal"/>
+                      <TextBlock Grid.Row="4" Grid.Column="0" Text="Veličina"/>
+                      <TextBlock Grid.Row="5" Grid.Column="0" Text="Dezen"/>
+                      <TextBlock Grid.Row="6" Grid.Column="0" Text="Cilj"/>
+                      <TextBlock Grid.Row="7" Grid.Column="0" Text="Uradjeno"/>
+                      <TextBlock Grid.Row="8" Grid.Column="0" Text="Fali"/>
+
+                      <TextBlock Grid.Row="2" Grid.Column="1" FontWeight="Bold" Text="{Binding Path=RadniNalogID}"/>
+                      <TextBlock Grid.Row="3" Grid.Column="1" FontWeight="SemiBold" Text="{Binding Path=ArtikalNaziv}"/>
+                      <TextBlock Grid.Row="4" Grid.Column="1" FontWeight="SemiBold" Text="{Binding Path=ArtikalVelicina}"/>
+                      <TextBlock Grid.Row="5" Grid.Column="1" FontWeight="SemiBold" Text="{Binding Path=ArtikalDezen}"/>
+                      <TextBlock Grid.Row="6" Grid.Column="1" FontWeight="SemiBold" Text="{Binding Path=Cilj}"/>
+
+                      <TextBlock Grid.Row="9" Grid.ColumnSpan="4" Text="{Binding Path=PutanjaFajla}" TextAlignment="Center"/>
+
+                      <Image Grid.Row="1" Grid.RowSpan="8" Grid.Column="2" Stretch="Uniform" Source="{Binding Path=Slika}" MaxHeight="150"/>
+
+                      <StackPanel Grid.Row="1" Grid.RowSpan="8" Grid.Column="3" Margin="5">
+                        <TextBlock Text="Predato:"/>
+                      </StackPanel>
+                      
+                    </Grid>
+
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+                </ListBox>
+                </StackPanel>
+
+                <Path Stretch="Fill" Margin="40,0" Width="50" Height="50"
+              Fill="Green"   
+              Data="M4.1561281,2.2702953 L4.8524521,2.2702954 4.8509674,3.963097 5.8969377,3.9630803 5.8969378,5.0916036 4.8524628,5.1061913 4.8524521,6.7843885 4.1561281,6.7843887 4.1559771,5.0877741 3.1116421,5.0916036 3.1116421,3.9630803 4.1556735,3.9654722 4.1561281,2.2702953 z"/>
+
+            </StackPanel>
+
+          </Border>
+
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

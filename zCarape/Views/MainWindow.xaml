@@ -1,0 +1,23 @@
+﻿<Window x:Class="zCarape.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:prism="http://prismlibrary.com/"
+        prism:ViewModelLocator.AutoWireViewModel="True"
+        Title="{Binding Title}" Height="350" Width="525" WindowState="Maximized" FontSize="14">
+  <DockPanel LastChildFill="True">
+    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,4">
+      <Button Content="Proizvodnja po mašinama" Margin="4,0,0,0" FontSize="14"
+              Command="{Binding NavigateCommand}" CommandParameter="MasineURadu"/>
+      <Button Content="Novi radni nalog" Margin="4,0,0,0" FontSize="14"
+              Command="{Binding NavigateCommand}" CommandParameter="RadniNalogUnos"/>
+      <Button Content="Artikli" Margin="4,0,0,0" FontSize="14"
+              Command="{Binding NavigateCommand}" CommandParameter="Artikli"/>
+      <Button Content="Mašine" Margin="4,0,0,0" FontSize="14"
+              Command="{Binding NavigateCommand}" CommandParameter="Masine"/>
+      <Button Content="Izveštaji" Margin="4,0,0,0" FontSize="14"
+              Command="{Binding NavigateCommand}" CommandParameter="Izvestaji"/>
+    </StackPanel>
+      
+      <ContentControl prism:RegionManager.RegionName="ContentRegion" />
+    </DockPanel>
+</Window>

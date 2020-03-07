@@ -1,0 +1,61 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29806.167
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zCarape", "zCarape\zCarape.csproj", "{B6F06A35-7E62-410D-832A-0531A6A83733}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modules", "Modules", "{A2A90A4D-49F3-4CA8-BC5F-2FCCD6C448CB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zCarape.Core", "zCarape.Core\zCarape.Core.csproj", "{F147EC54-EE46-4EB2-9140-941DCA19276B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zCarape.Services", "zCarape.Services\zCarape.Services.csproj", "{AC806693-5FF1-467A-85BD-204AF8B3625D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zCarape.Services.Interfaces", "zCarape.Services.Interfaces\zCarape.Services.Interfaces.csproj", "{141C823A-5E16-48F0-AB22-844028336579}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jezgro", "Modules\Jezgro\Jezgro.csproj", "{72FE2403-5EAF-4DE3-9FF3-0836EFBE5973}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Proizvodnja", "Modules\Proizvodnja\Proizvodnja.csproj", "{142B892B-F160-4653-A888-CC5F34F0A70A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B6F06A35-7E62-410D-832A-0531A6A83733}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6F06A35-7E62-410D-832A-0531A6A83733}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6F06A35-7E62-410D-832A-0531A6A83733}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6F06A35-7E62-410D-832A-0531A6A83733}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F147EC54-EE46-4EB2-9140-941DCA19276B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F147EC54-EE46-4EB2-9140-941DCA19276B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F147EC54-EE46-4EB2-9140-941DCA19276B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F147EC54-EE46-4EB2-9140-941DCA19276B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC806693-5FF1-467A-85BD-204AF8B3625D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC806693-5FF1-467A-85BD-204AF8B3625D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC806693-5FF1-467A-85BD-204AF8B3625D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC806693-5FF1-467A-85BD-204AF8B3625D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{141C823A-5E16-48F0-AB22-844028336579}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{141C823A-5E16-48F0-AB22-844028336579}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{141C823A-5E16-48F0-AB22-844028336579}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{141C823A-5E16-48F0-AB22-844028336579}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72FE2403-5EAF-4DE3-9FF3-0836EFBE5973}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72FE2403-5EAF-4DE3-9FF3-0836EFBE5973}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72FE2403-5EAF-4DE3-9FF3-0836EFBE5973}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72FE2403-5EAF-4DE3-9FF3-0836EFBE5973}.Release|Any CPU.Build.0 = Release|Any CPU
+		{142B892B-F160-4653-A888-CC5F34F0A70A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{142B892B-F160-4653-A888-CC5F34F0A70A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{142B892B-F160-4653-A888-CC5F34F0A70A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{142B892B-F160-4653-A888-CC5F34F0A70A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{72FE2403-5EAF-4DE3-9FF3-0836EFBE5973} = {A2A90A4D-49F3-4CA8-BC5F-2FCCD6C448CB}
+		{142B892B-F160-4653-A888-CC5F34F0A70A} = {A2A90A4D-49F3-4CA8-BC5F-2FCCD6C448CB}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A780C786-BFE9-4F39-8FE7-9A9F2E295B17}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>zCarape</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Slike\**" />
+    <EmbeddedResource Remove="Slike\**" />
+    <None Remove="Slike\**" />
+    <Page Remove="Slike\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Prism.DryIoc" Version="7.2.0.1422" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Modules\Jezgro\Jezgro.csproj" />
+    <ProjectReference Include="..\Modules\Proizvodnja\Proizvodnja.csproj" />
+    <ProjectReference Include="..\zCarape.Core\zCarape.Core.csproj" />
+    <ProjectReference Include="..\zCarape.Services.Interfaces\zCarape.Services.Interfaces.csproj" />
+    <ProjectReference Include="..\zCarape.Services\zCarape.Services.csproj" />
+  </ItemGroup>
+</Project>

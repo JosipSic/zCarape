@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>Proizvodnja</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Prism.Wpf" Version="7.2.0.1422" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\zCarape.Services.Interfaces\zCarape.Services.Interfaces.csproj" />
+    <ProjectReference Include="..\..\zCarape.Services\zCarape.Services.csproj" />
+  </ItemGroup>
+</Project>
