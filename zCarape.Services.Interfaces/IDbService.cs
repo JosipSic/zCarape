@@ -24,14 +24,33 @@ namespace zCarape.Services.Interfaces
         #endregion //Masine
 
         #region Artikli
-        IEnumerable<Artikal> GetAllArtikli();
 
-        IEnumerable<Velicina> GetVelicineArtikla(long artikalID);
+        Artikal GetArtikal(long artikalID);
+
+        IEnumerable<Artikal> GetAllArtikli();
 
         IEnumerable<DezenArtikla> GetDezeniArtikla(long artikalID);
 
         long InsertOrUpdateArtikal(Artikal artikal);
 
         #endregion //Artikli
+
+        #region Velicine
+
+        long InsertOrUpdateVelicina(Velicina velicina);
+
+        IEnumerable<Velicina> GetAllVelicine();
+
+        IEnumerable<Velicina> GetVelicine(long artikalID);
+
+        bool IzbrisiVelicinu(long id);
+
+        #endregion //Velicine
+
+        #region VelicineArtikla
+        IEnumerable<VelicinaArtikla> GetFromVelicineArtikla(long artikalID);
+
+        bool InsertOrUpdateVelicineArtikla(long artikalID, IEnumerable<long> velicineID);
+        #endregion
     }
 }

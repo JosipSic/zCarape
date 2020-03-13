@@ -12,6 +12,9 @@
     <Page Remove="Slike\**" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="Images\LeftGreen.png" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Prism.DryIoc" Version="7.2.0.1422" />
   </ItemGroup>
   <ItemGroup>
@@ -20,5 +23,8 @@
     <ProjectReference Include="..\zCarape.Core\zCarape.Core.csproj" />
     <ProjectReference Include="..\zCarape.Services.Interfaces\zCarape.Services.Interfaces.csproj" />
     <ProjectReference Include="..\zCarape.Services\zCarape.Services.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\LeftGreen.png" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,146 @@
+﻿<UserControl
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:prism="http://prismlibrary.com/"             
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="Jezgro.Views.ArtikliEdit"             
+             prism:ViewModelLocator.AutoWireViewModel="True" Background="AliceBlue" >
+  <UserControl.Resources>
+    <BooleanToVisibilityConverter x:Key="VisibleIfTrueConverter"/>
+  </UserControl.Resources>
+  <Viewbox Stretch="Uniform">
+    <Grid >
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition />
+        <ColumnDefinition />
+      </Grid.ColumnDefinitions>
+
+      <Grid >
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition  />
+          <ColumnDefinition  />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="65"/>
+          <RowDefinition Height="400"/>
+          <RowDefinition MinHeight="100"/>
+          <RowDefinition Height="60"/>
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Text="{Binding Naslov}" Margin="10,10,10,10" FontSize="30" FontWeight="Bold" Foreground="DarkRed"/>
+        
+        <!-- Osnovni podaci -->
+        <GroupBox Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="10" Height="380" Width="282" BorderThickness="1" BorderBrush="Black">
+          <GroupBox.Header>
+            <TextBlock Text="Osnovni podaci" FontStyle="Italic" FontWeight="SemiBold"/>
+          </GroupBox.Header>
+          <StackPanel Margin="0,10,0,0">
+            <TextBlock Text="Knjigovodstvena šifra"/>
+            <TextBox Text="{Binding Sifra}" Width="100"  HorizontalAlignment="Left"/>
+
+            <TextBlock Text="Naziv" Margin="0,10,0,0"/>
+            <TextBox Text="{Binding Naziv}" MinWidth="250" TextWrapping="WrapWithOverflow"/>
+
+            <TextBlock Text="Jm" Margin="0,10,0,0"/>
+            <TextBox Text="{Binding Jm}" Width="50" HorizontalAlignment="Left"/>
+
+            <TextBlock Text="Bar kod" Margin="0,10,0,0"/>
+            <TextBox Text="{Binding BarKod}"/>
+
+          </StackPanel>
+        </GroupBox>
+        
+        <!-- Slika -->
+        <GroupBox Grid.Column="1" Grid.Row="1" Padding="5" Margin="10,10,10,10" Width="430" BorderThickness="1" BorderBrush="Black">
+          <GroupBox.Header>
+            <TextBlock Text=" Slika " FontStyle="Italic" FontWeight="SemiBold"/>
+          </GroupBox.Header>
+          <Grid >
+            <Grid.RowDefinitions>
+              <RowDefinition Height="*"/>
+              <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Image Grid.Row="0" Stretch="Uniform" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Source="{Binding PunaPutanjaDoSlike}"/>
+            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" >
+              <Button Margin="10,5" Content="Dodaj sliku" Padding="10,0" Command="{Binding DodajSlikuCommand}"/>
+              <Button Margin="10,5" Content="Ukloni sliku" Padding="10,0" Command="{Binding UkloniSlikuCommand}"/>
+            </StackPanel>
+          </Grid>
+        </GroupBox>
+        
+        <!-- Velicine koje se prave -->
+       <GroupBox Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2" Margin="10,10,10,10" Width="730" BorderThickness="1" BorderBrush="Black">
+          <GroupBox.Header>
+            <TextBlock Text="Veličine koje se prave" FontStyle="Italic" FontWeight="SemiBold"/>
+          </GroupBox.Header>
+          <StackPanel>
+          
+          <ItemsControl ItemsSource="{Binding VelicineZaIzbor}" VerticalAlignment="Center">
+              <ItemsControl.Resources>
+                <ControlTemplate x:Key="EmptyListBoxTemplate">
+                  <TextBlock Text="Izaberite veličine u tabeli sa desne strane." HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="DarkGray"/>
+                </ControlTemplate>
+              </ItemsControl.Resources>
+              <ItemsControl.Style>
+                <Style TargetType="ItemsControl">
+                  <Style.Triggers>
+                    <DataTrigger Value="true" Binding="{Binding NemaIzabranihVelicina}">
+                      <Setter Property="Template" Value="{StaticResource EmptyListBoxTemplate}"/>
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </ItemsControl.Style>
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel Margin="5,5,0,0" Orientation="Horizontal" HorizontalAlignment="Center"/>
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Border Margin="2,2,4,2" BorderBrush="DarkGreen" Padding="10,2" BorderThickness="2" Visibility="{Binding Izbor, Converter={StaticResource VisibleIfTrueConverter}}">
+                  <TextBlock Text="{Binding Oznaka}" HorizontalAlignment="Center" FontSize="18"/>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </GroupBox>
+        
+        <!-- Snimi, Odustani -->
+        <StackPanel Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal">
+          <Button Content="Snimi" VerticalAlignment="Center" Margin="10,0" Padding="10" Width="258" Command="{Binding SnimiCommand}"/>
+          <Button Content="Odustani" VerticalAlignment="Center"  Padding="10" Width="258" Command="{Binding OdustaniCommand}"/>
+        </StackPanel>
+      </Grid>
+
+      <!-- Velicine za izbor -->
+      <Grid Grid.Column="1" Width="170" >
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="*"/>
+          <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Šifarnik Veličina:"/>
+        <DataGrid Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="False" ItemsSource="{Binding VelicineZaIzbor}" x:Name="IzborGrid">
+          <DataGrid.Columns>
+            <DataGridTemplateColumn Header="Veličina" SortMemberPath="Oznaka" CanUserSort="True" Width="110">
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding Oznaka}" Padding="20,0" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTemplateColumn Header="Izbor" SortMemberPath="Izbor" CanUserSort="True">
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate>
+                  <CheckBox IsChecked="{Binding Izbor, UpdateSourceTrigger=PropertyChanged}"
+                            Command="{Binding DataContext.VelicinaCommand, ElementName=IzborGrid}" HorizontalAlignment="Center"/>
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+          </DataGrid.Columns>
+        </DataGrid>
+        <Button Grid.Row="2" Content="Kreiraj novu veličinu" Margin="0,10,0,20" Padding="4,0" Command="{Binding KreirajNovuVelicinuCommand}"/>
+      </Grid>
+    </Grid>
+  </Viewbox>
+</UserControl>

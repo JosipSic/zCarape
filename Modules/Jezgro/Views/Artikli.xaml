@@ -1,42 +1,124 @@
-﻿<UserControl x:Class="Jezgro.Views.Artikli"
+﻿<UserControl xmlns:Syncfusion="http://schemas.syncfusion.com/wpf"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:prism="http://prismlibrary.com/"             
-             prism:ViewModelLocator.AutoWireViewModel="True" >
-   <Grid>
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d"  x:Class="Jezgro.Views.Artikli"             
+             prism:ViewModelLocator.AutoWireViewModel="True" d:DesignHeight="672.92" d:DesignWidth="1231.907" >
+  <Grid>
     <Grid.ColumnDefinitions>
-      <ColumnDefinition MinWidth="100" />
+      <ColumnDefinition MinWidth="100" Width="256"/>
       <ColumnDefinition/>
     </Grid.ColumnDefinitions>
-    <GridSplitter HorizontalAlignment="Right" Grid.Column="0" Width="7" Background="Gray" />
+    <GridSplitter HorizontalAlignment="Left" Grid.Column="1" Width="7" Background="Gray" />
 
     <!-- Spisak svih artikala -->
-    <StackPanel Grid.Column="0">
-      <TextBlock Text="Spisak svih artikala"/>
-      <ListView ItemsSource="{Binding Artikli}" Margin="10" VerticalAlignment="Stretch">
-        
-      </ListView>
-    </StackPanel>
-
-    <Grid Grid.Column="1">
+    <Grid Grid.Column="0">
       <Grid.RowDefinitions>
-        <RowDefinition/>
-        <RowDefinition/>
-        <RowDefinition/>
+        <RowDefinition Height="Auto" MinHeight="35"/>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
       </Grid.RowDefinitions>
-      
-      <!-- Osnovni podaci o artiklu-->
-      <Grid Grid.Row="0">
+      <TextBlock Grid.Row="0" Text="Spisak svih artikala" VerticalAlignment="Center" Margin="10,0" FontWeight="Bold" />
+
+      <TextBox Grid.Row="1" HorizontalAlignment="Left" Margin="10,0,10,0" MinWidth="150" Text="{Binding FilterArtikliString, UpdateSourceTrigger=PropertyChanged}" x:Name="FilterTextBox"/>
+      <TextBlock Grid.Row="1" HorizontalAlignment="Left" Margin="15,0,10,0" Text="Tekst za pretragu" Foreground="LightGray" IsHitTestVisible="False" >
+        <TextBlock.Style>
+          <Style TargetType="{x:Type TextBlock}">
+            <Setter Property="Visibility" Value="Collapsed"/>
+            <Style.Triggers>
+              <DataTrigger Binding="{Binding Text, ElementName=FilterTextBox}" Value="">
+                <Setter Property="Visibility" Value="Visible"/>
+              </DataTrigger>
+            </Style.Triggers>
+          </Style>
+        </TextBlock.Style>
+      </TextBlock>
+
+      <DataGrid Grid.Row="2" ItemsSource="{Binding Artikli}" Margin="10" VerticalAlignment="Stretch" AutoGenerateColumns="False" IsReadOnly="True" SelectedItem="{Binding SelectedArtikal}">
+        <DataGrid.Columns>
+          <DataGridTextColumn Header="Sifra" Binding="{Binding Sifra}"/>
+          <DataGridTextColumn Header="Naziv" Binding="{Binding Naziv}" Width="*"/>
+        </DataGrid.Columns>
+      </DataGrid>
+
+    </Grid>
+
+    <Grid Grid.Column="1" Margin="10,0,0,0">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+      </Grid.RowDefinitions>
+
+     <!-- Osnovni podaci o artiklu-->
+     <Grid Grid.Row="0">
         <Grid.ColumnDefinitions>
           <ColumnDefinition/>
-          <ColumnDefinition/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="100"/>
         </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-          <RowDefinition/>
-          <RowDefinition/>
-        </Grid.RowDefinitions>
-        <TextBlock Text="Knjigovodstvena šifra"/>
+        <StackPanel Grid.Column="0" Grid.Row="0" HorizontalAlignment="Left" Margin="20,0">
+          <StackPanel Orientation="Horizontal" Margin="0,30,0,0">
+            <TextBlock Text="Šifra:" Margin="0,0,5,0"/> 
+            <TextBlock Text="{Binding SelectedArtikal.Sifra}" FontWeight="DemiBold"/>
+            <TextBlock Text="Jm:" Margin="10,0,5,0"/>
+            <TextBlock Text="{Binding SelectedArtikal.Jm}" FontWeight="DemiBold"/>
+            <TextBlock Text="Bar kod:" Margin="10,0,5,0"/>
+            <TextBlock Text="{Binding SelectedArtikal.BarKod}" FontWeight="DemiBold"/>
+          </StackPanel>
+          <StackPanel>
+            <TextBlock Text="{Binding SelectedArtikal.Naziv}" FontWeight="DemiBold" FontSize="40"/>
+          </StackPanel>
+
+          <!-- Velicine koje se prave -->
+          <StackPanel>
+
+            <ItemsControl ItemsSource="{Binding Velicine}" VerticalAlignment="Center">
+              <ItemsControl.Resources>
+                <ControlTemplate x:Key="EmptyListBoxTemplate">
+                  <TextBlock Text="Nema dodeljenih veličina!" HorizontalAlignment="Left" VerticalAlignment="Center" Foreground="DarkGray"/>
+                </ControlTemplate>
+              </ItemsControl.Resources>
+              <ItemsControl.Style>
+                <Style TargetType="ItemsControl">
+                  <Style.Triggers>
+                    <DataTrigger Value="0" Binding="{Binding Velicine.Count}">
+                      <Setter Property="Template" Value="{StaticResource EmptyListBoxTemplate}"/>
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </ItemsControl.Style>
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel Margin="5,5,0,0" Orientation="Horizontal" HorizontalAlignment="Left"/>
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Border Margin="2,2,4,2" BorderBrush="DarkGreen" Padding="10,2" BorderThickness="2" >
+                    <TextBlock Text="{Binding Oznaka}" HorizontalAlignment="Center" FontSize="18"/>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </StackPanel>
+
+       <!-- Slika -->
+        <Image Grid.Column="1" MaxHeight="200" Source="{Binding PunaPutanjaDoSlike}" Stretch="Uniform"/>
+
+        <!-- NoviArtikal, Edit -->
+        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+          <Button Content="Novi artikal" Command="{Binding NoviArtikalCommand}" HorizontalAlignment="Left" Padding="20,10" Margin="0,0,10,10"/>
+          <Button Content="Edit" Command="{Binding EditArtikalCommand}" HorizontalAlignment="Left" Padding="20,10" Margin="0,0,10,0"/>
+        </StackPanel>
+
       </Grid>
+      
+      <!-- Dezeni -->
+      <GroupBox Grid.Row="1" Header="Dezeni" Margin="5" BorderBrush="Black">
+        <ContentControl prism:RegionManager.RegionName="DezeniRegion"/>
+      </GroupBox>
+
     </Grid>
   </Grid>
 </UserControl>

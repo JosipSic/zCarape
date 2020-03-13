@@ -16,6 +16,7 @@
               Command="{Binding NavigateCommand}" CommandParameter="Masine"/>
       <Button Content="Izveštaji" Margin="4,0,0,0" FontSize="14"
               Command="{Binding NavigateCommand}" CommandParameter="Izvestaji"/>
+
     </StackPanel>
       
       <ContentControl prism:RegionManager.RegionName="ContentRegion" />

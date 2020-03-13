@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
 using System.Text;
+using System.Windows;
 using zCarape.Core;
 using zCarape.Core.Models;
 using zCarape.Services.Interfaces;
+using System.Linq;
 
 namespace zCarape.Services
 {
@@ -183,7 +185,7 @@ namespace zCarape.Services
                     Opis = (dr["opis"] == DBNull.Value) ? string.Empty : (string)dr["opis"],
                     Slika = (dr["slika"] == DBNull.Value) ? string.Empty : (string)dr["slika"],
                     Aktivan = (long)dr["aktivan"]==1,
-                    VremeUnosa = (DateTime)dr["vremeunosa"]
+                    VremeUnosa = Helper.ConvertToDateTimeFromSqLite((string)dr["vremeunosa"])
                 };
             }
             else
@@ -201,6 +203,39 @@ namespace zCarape.Services
         #endregion // Masine
 
         #region Artikli
+        public Artikal GetArtikal(long artikalID)
+        {
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+            cmd.CommandText = "SELECT * FROM Artikli WHERE ID=@id";
+            cmd.Parameters.AddWithValue("@id", artikalID);
+
+            using SQLiteDataReader dr = cmd.ExecuteReader(System.Data.CommandBehavior.SingleRow);
+
+            if (dr.HasRows)
+            {
+                dr.Read();
+
+
+                return new Artikal()
+                {
+                    ID = (long)dr["id"],
+                    Sifra = (string)dr["sifra"],
+                    Naziv = (string)dr["naziv"],
+                    Jm = (string)dr["jm"],
+                    Slika = (dr["slika"] == DBNull.Value) ? string.Empty : (string)dr["slika"],
+                    BarKod = (dr["barkod"] == DBNull.Value) ? string.Empty : (string)dr["barkod"],
+                    VremeUnosa = Helper.ConvertToDateTimeFromSqLite((string)dr["vremeunosa"])
+                };
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         public IEnumerable<Artikal> GetAllArtikli()
         {
             List<Artikal> lista = new List<Artikal>();
@@ -226,37 +261,9 @@ namespace zCarape.Services
                         Jm = (string)dr["jm"],
                         Slika = (dr["slika"] == DBNull.Value) ? string.Empty : (string)dr["slika"],
                         BarKod = (dr["barkod"] == DBNull.Value) ? string.Empty : (string)dr["barkod"],
-                        VremeUnosa = (DateTime)dr["vremeunosa"]
+                        VremeUnosa = Helper.ConvertToDateTimeFromSqLite((string)dr["vremeunosa"])
                     }); ;
 
-                }
-            }
-
-            return lista;
-        }
-
-        public IEnumerable<Velicina> GetVelicineArtikla(long artikalID)
-        {
-            List<Velicina> lista = new List<Velicina>();
-            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
-            con.Open();
-
-            using var cmd = new SQLiteCommand(con);
-            cmd.CommandText = "SELECT * FROM Velicine INNER JOIN VelicineArtikla ON Velicine.ID=VelicineArtikla.ArtikalID WHERE VelicineArtikla.ArtikalID=@artikalID ORDER BY Velicine.Oznaka";
-            cmd.Parameters.AddWithValue("@artikalID", artikalID);
-
-            using SQLiteDataReader dr = cmd.ExecuteReader();
-
-            if (dr.HasRows)
-            {
-                while (dr.Read())
-                {
-                    lista.Add(new Velicina()
-                    {
-                        ID = (long)dr["id"],
-                        Oznaka = (string)dr["oznaka"],
-                        VremeUnosa = (DateTime)dr["vremeunosa"]
-                    }); ;
                 }
             }
 
@@ -288,7 +295,7 @@ namespace zCarape.Services
                         Slika1 = (string)dr["slika1"],
                         Slika2 = (string)dr["slika2"],
                         Slika3 = (string)dr["slika3"],
-                        VremeUnosa = (DateTime)dr["vremeunosa"]
+                        VremeUnosa = Helper.ConvertToDateTimeFromSqLite((string)dr["vremeunosa"])
                     }); ;
                 }
             }
@@ -312,14 +319,251 @@ namespace zCarape.Services
             if (noviZapis)
             {
                 cmd.CommandText = "INSERT INTO artikli (sifra,naziv,jm,slika,barkod) VALUES (@sifra,@naziv,@jm,@slika,@barkod)";
-                if (cmd.ExecuteNonQuery() == 1)
+                long odgovor = 0;
+                try
+                {
+                    odgovor = cmd.ExecuteNonQuery();
+                }
+                catch (SQLiteException ex)
+                {
+                    if (ex.ErrorCode == 19)
+                    {
+                        MessageBox.Show(String.Format($"Šifra artikla \"{artikal.Sifra}\" već postoji u bazi."),
+                            "Nisu dozvoljene duple šifre.", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    }
+                    else
+                    {
+                        MessageBox.Show(String.Format($"ErrorCode: {ex.ErrorCode}\nMessage: {ex.Message}"));
+                    }
+                }
+                catch (Exception ex)
+                {
+
+                    MessageBox.Show(String.Format($"nMessage: {ex.Message}"));
+                }
+
+                if (odgovor == 1)
                     return con.LastInsertRowId;
             }
             else
             {
-                cmd.CommandText = "UPDATE masina SET naziv=@naziv, opis=@opis, slika=@slika, aktivan=@aktivan WHERE id=@id";
+                cmd.CommandText = "UPDATE artikli SET sifra=@sifra, naziv=@naziv, jm=@jm, slika=@slika, barkod=@barkod WHERE id=@id";
             }
             return artikal.ID;
+
+        }
+        #endregion
+
+        #region Velicine
+
+        public long InsertOrUpdateVelicina(Velicina velicina)
+        {
+            if (string.IsNullOrWhiteSpace(velicina.Oznaka))
+            {
+                return 0;
+            }
+
+            bool noviZapis = velicina.ID == 0;
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+            cmd.Parameters.AddWithValue("@oznaka", velicina.Oznaka);
+
+            if (noviZapis)
+            {
+                cmd.CommandText = "INSERT INTO velicine (oznaka) VALUES (@oznaka)";
+
+                long odgovor = 0;
+                try
+                {
+                    odgovor = cmd.ExecuteNonQuery();
+                }
+                catch (SQLiteException ex)
+                {
+                    if (ex.ErrorCode==19)
+                    {
+                        MessageBox.Show(String.Format($"Veličina sa oznakom \"{velicina.Oznaka}\" već postoji u bazi."),
+                            "Nisu dozvoljeni dupli unosi",MessageBoxButton.OK,MessageBoxImage.Exclamation);
+                    }
+                    else
+                    {
+                        MessageBox.Show(String.Format($"ErrorCode: {ex.ErrorCode}\nMessage: {ex.Message}"));
+                    }
+                }
+                catch (Exception ex)
+                {
+
+                    MessageBox.Show(String.Format($"nMessage: {ex.Message}"));
+                }
+
+                if (odgovor == 1)
+                    return con.LastInsertRowId;
+            }
+            else
+            {
+                cmd.CommandText = "UPDATE velicine SET oznaka=@oznaka WHERE id=@id";
+            }
+            return velicina.ID;
+        }
+
+        public IEnumerable<Velicina> GetAllVelicine()
+        {
+            List<Velicina> lista = new List<Velicina>();
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+            cmd.CommandText = "SELECT * FROM velicine ORDER BY oznaka";
+
+            using SQLiteDataReader dr = cmd.ExecuteReader();
+
+            if (dr.HasRows)
+            {
+                while (dr.Read())
+                {
+
+
+                    lista.Add(new Velicina()
+                    {
+                        ID = (long)dr["id"],
+                        Oznaka = (string)dr["oznaka"],
+                        VremeUnosa = Helper.ConvertToDateTimeFromSqLite((string)dr["vremeunosa"])
+                    }); ;
+
+                }
+            }
+
+            return lista;
+        }
+
+        public IEnumerable<Velicina> GetVelicine(long artikalID)
+        {
+            List<Velicina> lista = new List<Velicina>();
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+            cmd.CommandText = "SELECT Velicine.* FROM Velicine INNER JOIN VelicineArtikla ON Velicine.ID=VelicineArtikla.VelicinaID WHERE VelicineArtikla.ArtikalID=@artikalID ORDER BY Velicine.Oznaka";
+            cmd.Parameters.AddWithValue("@artikalID", artikalID);
+
+            using SQLiteDataReader dr = cmd.ExecuteReader();
+
+            if (dr.HasRows)
+            {
+                while (dr.Read())
+                {
+                    lista.Add(new Velicina()
+                    {
+                        ID = (long)dr["id"],
+                        Oznaka = (string)dr["oznaka"],
+                        VremeUnosa = Helper.ConvertToDateTimeFromSqLite((string)dr["vremeunosa"])
+                    }); ;
+                }
+            }
+
+            return lista;
+        }
+
+
+        public bool IzbrisiVelicinu(long id)
+        {
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+            using var cmd = new SQLiteCommand(con);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.CommandText = "DELETE FROM velicine WHERE id=@id";
+            return cmd.ExecuteNonQuery() == 1;
+        }
+
+
+        #endregion //Velicine
+
+        #region VelicineArtikla
+        public IEnumerable<VelicinaArtikla> GetFromVelicineArtikla(long artikalID)
+        {
+            List<VelicinaArtikla> lista = new List<VelicinaArtikla>();
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+            cmd.CommandText = "SELECT * FROM VelicineArtikla WHERE VelicineArtikla.ArtikalID=@artikalID";
+            cmd.Parameters.AddWithValue("@artikalID", artikalID);
+
+            using SQLiteDataReader dr = cmd.ExecuteReader();
+
+            if (dr.HasRows)
+            {
+                while (dr.Read())
+                {
+                    lista.Add(new VelicinaArtikla()
+                    {
+                        ID = (long)dr["id"],
+                        ArtikalID = (long)dr["artikalid"],
+                        VelicinaID = (long)dr["velicinaid"],
+                        VremeUnosa = Helper.ConvertToDateTimeFromSqLite((string)dr["vremeunosa"])
+                    }); ;
+                }
+            }
+
+            return lista;
+        }
+
+
+        public bool InsertOrUpdateVelicineArtikla(long artikalID, IEnumerable<long> noveVelicineID)
+        {
+            if (artikalID==0)
+            {
+                MessageBox.Show("artikalID ne moze biti 0. Poruka iz procedure InsertOrUpdateVelicineArtikla", "Nije moguce snimiti velicine");
+                return false;
+            }
+
+            //1-Iz baze ucitavam sve velicine za trazeni artikal
+            IEnumerable<VelicinaArtikla> izBaze = GetFromVelicineArtikla(artikalID);
+
+            //2-Brisem uklonjene velicine (iz kolekcije izBaze sve zapise koji nemaju VelicinaID da se nalazi u kolekciji velicineID)
+            var uklonjeneVelicine = from va in izBaze
+                                    where va.ArtikalID == artikalID && !noveVelicineID.Contains(va.VelicinaID)
+                                    select va.ID;
+
+            foreach (long uklonjenID in uklonjeneVelicine)
+            {
+                using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+                con.Open();
+                using var cmd = new SQLiteCommand(con);
+                cmd.Parameters.AddWithValue("@id", uklonjenID);
+                cmd.CommandText = "DELETE FROM velicineartikla WHERE id=@id";
+                cmd.ExecuteNonQuery();
+            }
+
+            //3-Dodajem nove velicine
+            var dodateVelicine = from n in noveVelicineID
+                                 where !izBaze.Any(b => b.VelicinaID == n)
+                                 select n;
+
+            foreach (long dodataVelicinaID in dodateVelicine)
+            {
+                insertVelicinaArtikla(artikalID, dodataVelicinaID);
+            }
+
+            return true;
+        }
+
+        private long insertVelicinaArtikla(long artikalID, long velicinaID)
+        {
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+            cmd.Parameters.AddWithValue("@artikalid", artikalID);
+            cmd.Parameters.AddWithValue("@velicinaid", velicinaID);
+
+            cmd.CommandText = "INSERT INTO velicineartikla (artikalid,velicinaid) VALUES (@artikalid,@velicinaid)";
+
+            if (cmd.ExecuteNonQuery() == 1)
+                return con.LastInsertRowId;
+            else
+                return 0;
 
         }
 

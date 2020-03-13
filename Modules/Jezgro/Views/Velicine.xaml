@@ -1,0 +1,57 @@
+﻿<UserControl
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:prism="http://prismlibrary.com/"             
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="Jezgro.Views.Velicine"             
+             prism:ViewModelLocator.AutoWireViewModel="True" d:DesignHeight="248.6">
+  <StackPanel Orientation="Horizontal">
+    <StackPanel Margin="30">
+      <Button Padding="10,10,10,5" Command="{Binding NazadCommand}">
+        <StackPanel>
+          <Image Source="pack://application:,,,/zCarape;component/Images/LeftGreen.png" Width="150"/>
+          <TextBlock Text="Nazad na unos artikla" TextAlignment="Center"/>
+        </StackPanel>
+      </Button>
+    </StackPanel>
+    <Grid HorizontalAlignment="Center">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+      </Grid.RowDefinitions>
+    <WrapPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,40,0,20">
+      
+      <TextBlock Text="Oznaka veličine:" Margin="5" FontSize="20"/>
+      <TextBox Text="{Binding Oznaka, UpdateSourceTrigger=PropertyChanged}" MinWidth="150" FontSize="20"/>
+      <Button Content="Snimi" Margin="5" FontSize="20" Padding="10,0" Command="{Binding SnimiCommand}"/>
+    </WrapPanel>
+
+      <DataGrid Grid.Row="1" ItemsSource="{Binding Velicine}" AutoGenerateColumns="False" IsReadOnly="True" Margin="5" SelectedItem="{Binding SelectedVelicina}">
+        <DataGrid.Columns>
+        <DataGridTemplateColumn Header="Veličina" SortMemberPath="Oznaka" CanUserSort="True">
+          <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding Oznaka}" Padding="20,0" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+            </DataTemplate>
+          </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
+          <DataGridTemplateColumn>
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate>
+              <Button Content="Izbriši" Padding="10,0" Command="{Binding Path=DataContext.IzbrisiCommand, RelativeSource= {RelativeSource FindAncestor,
+  AncestorType={x:Type DataGrid}}}"  Background="AliceBlue"/>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn>
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate>
+              <Button Content="Promeni tekst oznake" Padding="10,0" Command="{Binding Path=DataContext.IzmeniCommand, RelativeSource= {RelativeSource FindAncestor, AncestorType={x:Type DataGrid}}}" Background="AliceBlue"/>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+        </DataGrid.Columns>
+      </DataGrid>
+    </Grid>
+  </StackPanel>
+
+</UserControl>

@@ -1,29 +1,31 @@
-﻿using Prism.Commands;
+﻿using Jezgro.Views;
+using Prism.Commands;
+using Prism.Ioc;
 using Prism.Mvvm;
+using Prism.Regions;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.IO;
 using System.Linq;
+using System.Windows.Data;
+using zCarape.Core;
 using zCarape.Core.Models;
 using zCarape.Services.Interfaces;
 
 namespace Jezgro.ViewModels
 {
-    public class ArtikliViewModel : BindableBase
+    public class ArtikliViewModel : BindableBase, INavigationAware
     {
         #region Fields
-        private long loadedID;
         private readonly IDbService _dbService;
+        private readonly IRegionManager _regionManager;
+        private ICollectionView _artikliCollectionView;
+
         #endregion //Fields ---------------------------------------------------------
 
         #region Properties
-        public string Sifra { get; set; }
-        public string Naziv { get; set; }
-        public string Jm { get; set; }
-        public string Slika { get; set; }
-        public string BarKod { get; set; }
-        public DateTime VremeUnosa { get; set; }
-
 
         // Artikli
         private ObservableCollection<Artikal> _artikli;
@@ -58,101 +60,116 @@ namespace Jezgro.ViewModels
                 if (_selectedArtikal!=value)
                 {
                     SetProperty(ref _selectedArtikal, value);
-                    PopuniSvojstvaZaSelektovaniArtikal();
                     PopuniVelicineSelektovanogArtikla();
                     PopuniDezeneSelektovanogArtikla();
+                   
+                    if (string.IsNullOrWhiteSpace(value.Slika))
+                        PunaPutanjaDoSlike = string.Empty;
+                    else
+                        PunaPutanjaDoSlike = Path.Combine(GlobalniKod.SlikeDir, value.Slika);
                 }
             }
         }
+
+        // FilterArtikliString
+        private string _filterArtikliString;
+        public string FilterArtikliString
+        {
+            get { return _filterArtikliString; }
+            set { SetProperty(ref _filterArtikliString, value);
+                if (_artikliCollectionView!=null)
+                {
+                    _artikliCollectionView.Refresh();
+                }
+            }
+        }
+
+        // PunaPutanjaDoSlike
+        private string _punaPutanjaDoSlike;
+        public string PunaPutanjaDoSlike
+        {
+            get { return _punaPutanjaDoSlike; }
+            set { SetProperty(ref _punaPutanjaDoSlike, value); }
+        }
+
+
         #endregion //Properties ------------------------------------------------------
 
         #region Cmd
+        // NoviArtikalCommand
+        private DelegateCommand _noviArtikalCommand;
+        public DelegateCommand NoviArtikalCommand =>
+            _noviArtikalCommand ?? (_noviArtikalCommand = new DelegateCommand(ExecuteNoviArtikalCommand));
 
-        // Snimi
-        private DelegateCommand _snimiCommand;
-        public DelegateCommand SnimiCommand =>
-            _snimiCommand ?? (_snimiCommand = new DelegateCommand(ExecuteSnimiCommand, UslovZaSnimanje));
-
-        void ExecuteSnimiCommand()
+        void ExecuteNoviArtikalCommand()
         {
-            if (!UslovZaSnimanje()) return;
-            Artikal azuriranArtikal = new Artikal() { ID = this.loadedID, Sifra = this.Sifra, Naziv = this.Naziv, Jm = this.Jm, Slika = this.Slika, BarKod = this.BarKod };
-            long odgovor = _dbService.InsertOrUpdateArtikal(azuriranArtikal);
-            if (odgovor>0)
-            {
-                if (loadedID==0)
-                {
-                    azuriranArtikal.ID = odgovor;
-                    this.Artikli.Add(azuriranArtikal);
-                }
-               SelectedArtikal = azuriranArtikal;
-            }
+            _regionManager.RequestNavigate(RegionNames.ContentRegion, ViewNames.ArtikliEdit);
         }
 
-        private bool UslovZaSnimanje()
+        // EditArtikalCommand
+        private DelegateCommand _editArtikalCommand;
+        public DelegateCommand EditArtikalCommand =>
+            _editArtikalCommand ?? (_editArtikalCommand = new DelegateCommand(ExecuteEditArtikalCommand));
+
+        void ExecuteEditArtikalCommand()
         {
-            if (string.IsNullOrWhiteSpace(this.Sifra)) return false;
-            if (string.IsNullOrWhiteSpace(this.Naziv)) return false;
-            return true;
+            if (SelectedArtikal == null)
+                return;
+
+            NavigationParameters navPar = new NavigationParameters();
+            navPar.Add("ArtikalID", SelectedArtikal.ID);
+            _regionManager.RequestNavigate(RegionNames.ContentRegion, ViewNames.ArtikliEdit, navPar);
         }
-
-        // Odustani
-        private DelegateCommand _odustaniCommand;
-        public DelegateCommand OdustaniCommand =>
-            _odustaniCommand ?? (_odustaniCommand = new DelegateCommand(ExecuteOdustaniCommand, CanExecuteOdustaniCommand));
-
-        void ExecuteOdustaniCommand()
-        {
-            PopuniSvojstvaZaSelektovaniArtikal();
-        }
-
-        bool CanExecuteOdustaniCommand()
-        {
-            return true;
-        }
-
-        #endregion //Cmd
+        #endregion
 
         #region Methods
 
         private void FormirajSpisakArtikala()
         {
             Artikli = new ObservableCollection<Artikal>(_dbService.GetAllArtikli());
+            _artikliCollectionView = CollectionViewSource.GetDefaultView(Artikli);
+            _artikliCollectionView.Filter = new Predicate<object>(FilterArtikli);
         }
 
-        // Kada se promeni selektovani artikal 
-        private void PopuniSvojstvaZaSelektovaniArtikal()
+        private bool FilterArtikli(object obj)
         {
-            this.loadedID = SelectedArtikal.ID;
-            this.Sifra = SelectedArtikal.Sifra;
-            this.Naziv = SelectedArtikal.Naziv;
-            this.Jm = SelectedArtikal.Jm;
-            this.Slika = SelectedArtikal.Slika;
-            this.BarKod = SelectedArtikal.BarKod;
-            this.VremeUnosa = SelectedArtikal.VremeUnosa;
+            var data = obj as Artikal;
+            if (data != null)
+            {
+                if (!string.IsNullOrWhiteSpace(FilterArtikliString))
+                {
+                    return data.Naziv.Contains(FilterArtikliString,StringComparison.InvariantCultureIgnoreCase) 
+                        || data.Sifra.Contains(FilterArtikliString,StringComparison.InvariantCulture);     
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private void PopuniVelicineSelektovanogArtikla()
         {
-            if (this.loadedID==0)
+            if (SelectedArtikal==null)
             {
                 this.Velicine = new ObservableCollection<Velicina>();
             }
             else
             {
-                this.Velicine = new ObservableCollection<Velicina>(_dbService.GetVelicineArtikla(this.loadedID));
+                this.Velicine = new ObservableCollection<Velicina>(_dbService.GetVelicine(SelectedArtikal.ID));
             }
         }
 
         private void PopuniDezeneSelektovanogArtikla()
         {
-            if (this.loadedID == 0)
+            if (SelectedArtikal==null)
             {
                 this.Dezeni = new ObservableCollection<DezenArtikla>();
             }
             else
             {
-                this.Dezeni = new ObservableCollection<DezenArtikla>(_dbService.GetDezeniArtikla(this.loadedID));
+                this.Dezeni = new ObservableCollection<DezenArtikla>(_dbService.GetDezeniArtikla(SelectedArtikal.ID));
             }
         }
 
@@ -165,12 +182,31 @@ namespace Jezgro.ViewModels
 
         #region Ctor
 
-        public ArtikliViewModel(IDbService dbService)
+        public ArtikliViewModel(IDbService dbService, IRegionManager regionManager)
         {
             _dbService = dbService;
-            FormirajSpisakArtikala();
+            _regionManager = regionManager;
         }
 
         #endregion //Ctor
+
+        #region INavigationAware
+
+        public void OnNavigatedTo(NavigationContext navigationContext)
+        {
+            FormirajSpisakArtikala();
+        }
+
+        public bool IsNavigationTarget(NavigationContext navigationContext)
+        {
+            return true;
+        }
+
+        public void OnNavigatedFrom(NavigationContext navigationContext)
+        {
+            
+        }
+
+        #endregion //INavigationAware
     }
 }
