@@ -19,7 +19,7 @@ namespace Jezgro
 
         public void OnInitialized(IContainerProvider containerProvider)
         {
-            _regionManager.RegisterViewWithRegion(RegionNames.DezeniRegion, typeof(Dezeni));
+
         }
 
 
@@ -29,11 +29,14 @@ namespace Jezgro
             containerRegistry.RegisterForNavigation<Artikli, ArtikliViewModel>();
             containerRegistry.RegisterForNavigation<Velicine, VelicineViewModel>();
             containerRegistry.RegisterForNavigation<ArtikliEdit, ArtikliEditViewModel>();
+            containerRegistry.RegisterForNavigation<DezeniEdit, DezeniEditViewModel>();
 
             // Za svaki View vezujem odgovarajuci ViewModel (kod radi i bez toga posto sledi Prizm konvenziju, ali je ovako brze posto nema potrebe da se koristi refleksija
             ViewModelLocationProvider.Register<Artikli, ArtikliViewModel>();
             ViewModelLocationProvider.Register<Velicine, VelicineViewModel>();
             ViewModelLocationProvider.Register<ArtikliEdit, ArtikliEditViewModel>();
+            ViewModelLocationProvider.Register<DezeniEdit, DezeniEditViewModel>();
+
         }
     }
 }

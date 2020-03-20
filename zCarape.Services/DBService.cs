@@ -270,38 +270,6 @@ namespace zCarape.Services
             return lista;
         }
 
-        public IEnumerable<DezenArtikla> GetDezeniArtikla(long artikalID)
-        {
-            List<DezenArtikla> lista = new List<DezenArtikla>();
-            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
-            con.Open();
-
-            using var cmd = new SQLiteCommand(con);
-            cmd.CommandText = "SELECT * FROM DezeniArtikla WHERE ArtikalID=@artikalID";
-            cmd.Parameters.AddWithValue("@artikalID", artikalID);
-
-            using SQLiteDataReader dr = cmd.ExecuteReader();
-
-            if (dr.HasRows)
-            {
-                while (dr.Read())
-                {
-                    lista.Add(new DezenArtikla()
-                    {
-                        ID = (long)dr["id"],
-                        ArtikalID = (long)dr["artikalid"],
-                        Naziv = (string)dr["naziv"],
-                        Opis = (string)dr["opis"],
-                        Slika1 = (string)dr["slika1"],
-                        Slika2 = (string)dr["slika2"],
-                        Slika3 = (string)dr["slika3"],
-                        VremeUnosa = Helper.ConvertToDateTimeFromSqLite((string)dr["vremeunosa"])
-                    }); ;
-                }
-            }
-
-            return lista;
-        }
 
         public long InsertOrUpdateArtikal(Artikal artikal)
         {
@@ -347,12 +315,194 @@ namespace zCarape.Services
             }
             else
             {
+                cmd.Parameters.AddWithValue("@id", artikal.ID);
                 cmd.CommandText = "UPDATE artikli SET sifra=@sifra, naziv=@naziv, jm=@jm, slika=@slika, barkod=@barkod WHERE id=@id";
+                try
+                {
+                    cmd.ExecuteNonQuery();
+                }
+                catch (SQLiteException ex)
+                {
+                    if (ex.ErrorCode == 19)
+                    {
+                        MessageBox.Show(String.Format($"Šifra artikla \"{artikal.Sifra}\" već postoji u bazi."),
+                            "Nisu dozvoljene duple šifre.", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    }
+                    else
+                    {
+                        MessageBox.Show(String.Format($"ErrorCode: {ex.ErrorCode}\nMessage: {ex.Message}"));
+                    }
+                }
+                catch (Exception ex)
+                {
+
+                    MessageBox.Show(String.Format($"nMessage: {ex.Message}"));
+                }
+
             }
             return artikal.ID;
 
         }
+
+
         #endregion
+
+        #region DezeniArtikala
+
+        public long InsertOrUpdateDezenArtikla(DezenArtikla dezenArtikla)
+        {
+            bool noviZapis = dezenArtikla.ID == 0;
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+            cmd.Parameters.AddWithValue("@artikalid", dezenArtikla.ArtikalID);
+            cmd.Parameters.AddWithValue("@naziv", dezenArtikla.Naziv);
+            cmd.Parameters.AddWithValue("@opis", dezenArtikla.Opis);
+            cmd.Parameters.AddWithValue("@slika1", dezenArtikla.Slika1);
+            cmd.Parameters.AddWithValue("@slika2", dezenArtikla.Slika2);
+            cmd.Parameters.AddWithValue("@slika3", dezenArtikla.Slika3);
+            cmd.Parameters.AddWithValue("@aktivan", dezenArtikla.Aktivan);
+
+            if (noviZapis)
+            {
+                cmd.CommandText = "INSERT INTO dezeniartikla (artikalid,naziv,opis,slika1,slika2,slika3,aktivan) VALUES (@artikalid,@naziv,@opis,@slika1,@slika2,@slika3,@aktivan)";
+                long odgovor = 0;
+                try
+                {
+                    odgovor = cmd.ExecuteNonQuery();
+                }
+                catch (SQLiteException ex)
+                {
+                    if (ex.ErrorCode == 19)
+                    {
+                        MessageBox.Show(String.Format($"Naziv dezen \"{dezenArtikla.Naziv}\" za izabrani artikal već postoji u bazi."),
+                            "Nisu dozvoljene dupli nazivi dezena za isti artikal.", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    }
+                    else
+                    {
+                        MessageBox.Show(String.Format($"ErrorCode: {ex.ErrorCode}\nMessage: {ex.Message}"));
+                    }
+                }
+                catch (Exception ex)
+                {
+
+                    MessageBox.Show(String.Format($"nMessage: {ex.Message}"));
+                }
+
+                if (odgovor == 1)
+                    return con.LastInsertRowId;
+            }
+            else
+            {
+                cmd.Parameters.AddWithValue("@id", dezenArtikla.ID);
+                cmd.CommandText = "UPDATE dezeniartikla SET artikalid=@artikalid, naziv=@naziv,  opis=@opis, slika1=@slika1 " +
+                    ",slika2=@slika2, slika3=@slika3, aktivan=@aktivan WHERE id=@id";
+                try
+                {
+                    cmd.ExecuteNonQuery();
+                }
+                catch (SQLiteException ex)
+                {
+                    if (ex.ErrorCode == 19)
+                    {
+                        MessageBox.Show(String.Format($"Naziv dezen \"{dezenArtikla.Naziv}\" za izabrani artikal već postoji u bazi."),
+                            "Nisu dozvoljene dupli nazivi dezena za isti artikal.", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    }
+                    else
+                    {
+                        MessageBox.Show(String.Format($"ErrorCode: {ex.ErrorCode}\nMessage: {ex.Message}"));
+                    }
+                }
+                catch (Exception ex)
+                {
+
+                    MessageBox.Show(String.Format($"nMessage: {ex.Message}"));
+                }
+
+            }
+            return dezenArtikla.ID;
+        }
+
+        public IEnumerable<DezenArtikla> GetDezeniArtikla(long artikalID)
+        {
+            List<DezenArtikla> lista = new List<DezenArtikla>();
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+            cmd.CommandText = "SELECT * FROM DezeniArtikla WHERE ArtikalID=@artikalID";
+            cmd.Parameters.AddWithValue("@artikalID", artikalID);
+
+            using SQLiteDataReader dr = cmd.ExecuteReader();
+
+            if (dr.HasRows)
+            {
+                while (dr.Read())
+                {
+                    lista.Add(
+                        new DezenArtikla() 
+                        { 
+                            ID = (long)dr["id"], 
+                            ArtikalID = (long)dr["artikalid"], 
+                            Naziv = (string)dr["naziv"],
+                            Opis = (dr["opis"] == DBNull.Value) ? string.Empty : (string)dr["opis"],
+                            Slika1 = (dr["slika1"] == DBNull.Value) ? string.Empty : (string)dr["slika1"],
+                            Slika2 = (dr["slika2"] == DBNull.Value) ? string.Empty : (string)dr["slika2"],
+                            Slika3 = (dr["slika3"] == DBNull.Value) ? string.Empty : (string)dr["slika3"],
+                            VremeUnosa = Helper.ConvertToDateTimeFromSqLite((string)dr["vremeunosa"])
+                        }
+                    );
+                }
+            }
+
+            return lista;
+        }
+
+        public DezenArtikla GetDezenArtikla(long dezenArtiklaID)
+        {
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+            cmd.CommandText = "SELECT * FROM DezeniArtikla WHERE ID=@id";
+            cmd.Parameters.AddWithValue("@id", dezenArtiklaID);
+
+            using SQLiteDataReader dr = cmd.ExecuteReader(System.Data.CommandBehavior.SingleRow);
+
+            if (dr.HasRows)
+            {
+                dr.Read();
+
+                return new DezenArtikla()
+                {
+                    ID = (long)dr["id"],
+                    ArtikalID = (long)dr["artikalid"],
+                    Naziv = (string)dr["naziv"],
+                    Opis = (dr["opis"] == DBNull.Value) ? string.Empty : (string)dr["opis"],
+                    Slika1 = (dr["slika1"] == DBNull.Value) ? string.Empty : (string)dr["slika1"],
+                    Slika2 = (dr["slika2"] == DBNull.Value) ? string.Empty : (string)dr["slika2"],
+                    Slika3 = (dr["slika3"] == DBNull.Value) ? string.Empty : (string)dr["slika3"],
+                    VremeUnosa = Helper.ConvertToDateTimeFromSqLite((string)dr["vremeunosa"])
+                };
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public bool IzbrisiDezenArtikla(long id)
+        {
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+            using var cmd = new SQLiteCommand(con);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.CommandText = "DELETE FROM DezeniArtikla WHERE id=@id";
+            return cmd.ExecuteNonQuery() == 1;
+        }
+
+        #endregion //DezeniArtikala
 
         #region Velicine
 
@@ -402,7 +552,29 @@ namespace zCarape.Services
             }
             else
             {
+                cmd.Parameters.AddWithValue("@id", velicina.ID);
                 cmd.CommandText = "UPDATE velicine SET oznaka=@oznaka WHERE id=@id";
+                try
+                {
+                    cmd.ExecuteNonQuery();
+                }
+                catch (SQLiteException ex)
+                {
+                    if (ex.ErrorCode == 19)
+                    {
+                        MessageBox.Show(String.Format($"Veličina sa oznakom \"{velicina.Oznaka}\" već postoji u bazi."),
+                            "Nisu dozvoljeni dupli unosi", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    }
+                    else
+                    {
+                        MessageBox.Show(String.Format($"ErrorCode: {ex.ErrorCode}\nMessage: {ex.Message}"));
+                    }
+                }
+                catch (Exception ex)
+                {
+
+                    MessageBox.Show(String.Format($"nMessage: {ex.Message}"));
+                }
             }
             return velicina.ID;
         }
@@ -458,7 +630,7 @@ namespace zCarape.Services
                         ID = (long)dr["id"],
                         Oznaka = (string)dr["oznaka"],
                         VremeUnosa = Helper.ConvertToDateTimeFromSqLite((string)dr["vremeunosa"])
-                    }); ;
+                    });
                 }
             }
 

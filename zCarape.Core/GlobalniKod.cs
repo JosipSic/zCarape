@@ -11,5 +11,8 @@ namespace zCarape.Core
         public static string SlikeDir = ConfigurationManager.AppSettings["SlikeDir"];
 
         public static string ConnectionString => "Data Source=" + BazaPath + ";Version=3;ForeignKeys=True";
+
+        public static DezenParam DezenParam { get; set; } = new DezenParam();
+
     }
 }

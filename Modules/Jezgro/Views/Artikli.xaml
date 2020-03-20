@@ -1,13 +1,18 @@
 ﻿<UserControl xmlns:Syncfusion="http://schemas.syncfusion.com/wpf"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:prism="http://prismlibrary.com/"             
+             xmlns:prism="http://prismlibrary.com/"    
+             xmlns:core="clr-namespace:zCarape.Core;assembly=zCarape.Core"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d"  x:Class="Jezgro.Views.Artikli"             
              prism:ViewModelLocator.AutoWireViewModel="True" d:DesignHeight="672.92" d:DesignWidth="1231.907" >
+  <UserControl.Resources>
+    <core:SlikaToPunaPutanjaKonverter x:Key="SlikaDoPunePutanjeKonverter"/>
+    <BooleanToVisibilityConverter x:Key="BooleanToVisibleConverter"/>
+  </UserControl.Resources>
   <Grid>
     <Grid.ColumnDefinitions>
       <ColumnDefinition MinWidth="100" Width="256"/>
-      <ColumnDefinition/>
+      <ColumnDefinition MinWidth="50"/>
     </Grid.ColumnDefinitions>
     <GridSplitter HorizontalAlignment="Left" Grid.Column="1" Width="7" Background="Gray" />
 
@@ -34,7 +39,7 @@
         </TextBlock.Style>
       </TextBlock>
 
-      <DataGrid Grid.Row="2" ItemsSource="{Binding Artikli}" Margin="10" VerticalAlignment="Stretch" AutoGenerateColumns="False" IsReadOnly="True" SelectedItem="{Binding SelectedArtikal}">
+      <DataGrid Grid.Row="2" ItemsSource="{Binding Artikli}" Margin="10" VerticalAlignment="Stretch" AutoGenerateColumns="False" IsReadOnly="True" SelectedItem="{Binding SelectedArtikal}" SelectionMode="Single">
         <DataGrid.Columns>
           <DataGridTextColumn Header="Sifra" Binding="{Binding Sifra}"/>
           <DataGridTextColumn Header="Naziv" Binding="{Binding Naziv}" Width="*"/>
@@ -54,9 +59,9 @@
         <Grid.ColumnDefinitions>
           <ColumnDefinition/>
           <ColumnDefinition Width="Auto"/>
-          <ColumnDefinition Width="100"/>
+          <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
-        <StackPanel Grid.Column="0" Grid.Row="0" HorizontalAlignment="Left" Margin="20,0">
+        <StackPanel Grid.Column="0" Grid.Row="0" HorizontalAlignment="Left" Margin="20,0" Visibility="{Binding IsSelectedArtikal, Converter={StaticResource BooleanToVisibleConverter}}">
           <StackPanel Orientation="Horizontal" Margin="0,30,0,0">
             <TextBlock Text="Šifra:" Margin="0,0,5,0"/> 
             <TextBlock Text="{Binding SelectedArtikal.Sifra}" FontWeight="DemiBold"/>
@@ -104,19 +109,133 @@
         </StackPanel>
 
        <!-- Slika -->
-        <Image Grid.Column="1" MaxHeight="200" Source="{Binding PunaPutanjaDoSlike}" Stretch="Uniform"/>
+        <Image Grid.Column="1" MaxHeight="200" Source="{Binding PunaPutanjaDoSlike}" Stretch="Uniform" Margin="0,0,20,0">
+          <Image.InputBindings>
+            <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding SlikaCommand}" />
+          </Image.InputBindings>
+        </Image>
 
         <!-- NoviArtikal, Edit -->
         <StackPanel Grid.Column="2" VerticalAlignment="Center">
-          <Button Content="Novi artikal" Command="{Binding NoviArtikalCommand}" HorizontalAlignment="Left" Padding="20,10" Margin="0,0,10,10"/>
-          <Button Content="Edit" Command="{Binding EditArtikalCommand}" HorizontalAlignment="Left" Padding="20,10" Margin="0,0,10,0"/>
+          <Button Command="{Binding NoviArtikalCommand}" HorizontalAlignment="Left"  Margin="10,0,20,10" Height="42">
+            <StackPanel Orientation="Horizontal">
+              <Image Source="pack://application:,,,/zCarape;component/Images/Add.png" Stretch="Uniform"/>
+              <TextBlock Text="Novi artikal" VerticalAlignment="Center" Margin="10,0"/>
+            </StackPanel>
+          </Button>
+          <Button Command="{Binding EditArtikalCommand}" HorizontalAlignment="Left"  Margin="10,0,20,10" Height="42" Visibility="{Binding IsSelectedArtikal, Converter={StaticResource BooleanToVisibleConverter}}">
+            <StackPanel Orientation="Horizontal">
+              <Image Source="pack://application:,,,/zCarape;component/Images/edit.png" />
+              <TextBlock Text="Edit" VerticalAlignment="Center" Margin="10,0"/>
+            </StackPanel>
+          </Button>
         </StackPanel>
 
       </Grid>
       
       <!-- Dezeni -->
-      <GroupBox Grid.Row="1" Header="Dezeni" Margin="5" BorderBrush="Black">
-        <ContentControl prism:RegionManager.RegionName="DezeniRegion"/>
+      <GroupBox Grid.Row="1" Header="Dezeni:" FontSize="18"  FontWeight="SemiBold" Background="AliceBlue"  Margin="5" BorderBrush="Transparent" Visibility="{Binding IsSelectedArtikal, Converter={StaticResource BooleanToVisibleConverter}}">
+        <ScrollViewer>
+        <StackPanel>
+          <StackPanel.Resources>
+            
+            <!-- Dezen za prikaz template -->
+            <DataTemplate x:Key="PrikaziDezenTemplate" >
+              <Border Height="250" BorderThickness="1" BorderBrush="DarkGreen" Padding="4" Margin="4">
+                <Grid Background="White">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                  <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition Height="Auto"/>
+                  </Grid.RowDefinitions>
+                    <!-- Slike dezena -->
+                    <Image Grid.Column="0" MaxWidth="250" Source="{Binding Slika1, Converter={StaticResource SlikaDoPunePutanjeKonverter}}" Stretch="Uniform">
+                      <Image.InputBindings>
+                        <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType=StackPanel}, Path=DataContext.SlikaCommand}" CommandParameter="{Binding Slika1}" />
+                      </Image.InputBindings>
+                    </Image>
+                    <Image Grid.Column="1" MaxWidth="250" Source="{Binding Slika2, Converter={StaticResource SlikaDoPunePutanjeKonverter}}" Stretch="Uniform">
+                      <Image.InputBindings>
+                        <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType=StackPanel}, Path=DataContext.SlikaCommand}" CommandParameter="{Binding Slika2}" />
+                      </Image.InputBindings>
+                    </Image>
+                    <Image Grid.Column="2" MaxWidth="250" Grid.ColumnSpan="2" Source="{Binding Slika3, Converter={StaticResource SlikaDoPunePutanjeKonverter}}" Stretch="Uniform">
+                      <Image.InputBindings>
+                        <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType=StackPanel}, Path=DataContext.SlikaCommand}" CommandParameter="{Binding Slika3}" />
+                      </Image.InputBindings>
+                    </Image>
+
+                    <!-- Naziv dezena i Edit dugme -->
+                    <Grid Grid.Row="1" Grid.ColumnSpan="3">
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="25"/>
+                      </Grid.ColumnDefinitions>
+                      <TextBlock Grid.Column="0"  Text="{Binding Naziv}" HorizontalAlignment="Center" FontSize="18"/>
+                      <Button Grid.Column="1" Command="{Binding DataContext.EditDezenCommand, RelativeSource ={RelativeSource AncestorType=StackPanel}}" CommandParameter="{Binding ID}"  Height="25" Background="Transparent" BorderBrush="Transparent">
+                          <Image Source="pack://application:,,,/zCarape;component/Images/edit.png" />
+                      </Button>
+                    </Grid>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </StackPanel.Resources>
+        
+            <!-- Spisak svih dezena -->
+            <ItemsControl ItemsSource="{Binding Dezeni}" HorizontalAlignment="Left" ItemTemplate="{StaticResource PrikaziDezenTemplate}">
+
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel Margin="5,5,0,0" Orientation="Horizontal" HorizontalAlignment="Left"/>
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              
+            </ItemsControl>
+            
+            <!-- Dodaj novi dezen -->
+            <Button Width="150" Height="150" Command="{Binding EditDezenCommand}" Background="Transparent" BorderBrush="Transparent" >
+              <Button.Triggers>
+                <EventTrigger RoutedEvent="Button.MouseEnter">
+                  <BeginStoryboard>
+                    <Storyboard>
+                      <DoubleAnimation Storyboard.TargetName="PlusSign" Storyboard.TargetProperty="Opacity" From="0.5" To="1.0" Duration="0:0:1" />
+                      <DoubleAnimation Storyboard.TargetName="PlusSign" Storyboard.TargetProperty="Height" From="40" To="50" Duration="0:0:0.2" />
+                      <DoubleAnimation Storyboard.TargetName="PlusSign" Storyboard.TargetProperty="Width" From="40" To="50" Duration="0:0:0.2"  />
+                      <ColorAnimation Storyboard.TargetName="DodajDezenBoja" Storyboard.TargetProperty="Color" From="Gray" To="Black" Duration="0:0:0.1"/>
+                    </Storyboard>
+                  </BeginStoryboard>
+                </EventTrigger>
+                <EventTrigger RoutedEvent="Button.MouseLeave">
+                  <BeginStoryboard>
+                    <Storyboard>
+                      <DoubleAnimation Storyboard.TargetName="PlusSign" Storyboard.TargetProperty="Opacity" From="1" To="0.5" Duration="0:0:0.1" />
+                      <DoubleAnimation Storyboard.TargetName="PlusSign" Storyboard.TargetProperty="Height" From="50" To="40" Duration="0:0:0.1" />
+                      <DoubleAnimation Storyboard.TargetName="PlusSign" Storyboard.TargetProperty="Width" From="50" To="40" Duration="0:0:0.1"  />
+                      <ColorAnimation Storyboard.TargetName="DodajDezenBoja" Storyboard.TargetProperty="Color" From="Black" To="Gray" Duration="0:0:0.1"/>
+                    </Storyboard>
+                  </BeginStoryboard>
+                </EventTrigger>
+              </Button.Triggers>
+              <StackPanel>
+                <StackPanel Height="60">
+                  <Path x:Name="PlusSign" Stretch="Fill" Width="40" Height="40" Margin="0,0,0,15" Opacity="0.5"
+                        Fill="Green"   
+                        Data="M4.1561281,2.2702953 L4.8524521,2.2702954 4.8509674,3.963097 5.8969377,3.9630803 5.8969378,5.0916036 4.8524628,5.1061913 4.8524521,6.7843885 4.1561281,6.7843887 4.1559771,5.0877741 3.1116421,5.0916036 3.1116421,3.9630803 4.1556735,3.9654722 4.1561281,2.2702953 z"/>
+                </StackPanel>
+                <TextBlock Text="Dodaj dezen" >
+                  <TextBlock.Foreground>
+                    <SolidColorBrush Color="Gray" x:Name="DodajDezenBoja"/>
+                  </TextBlock.Foreground>
+                </TextBlock>
+              </StackPanel>
+            </Button>
+
+          </StackPanel>
+        </ScrollViewer>
       </GroupBox>
 
     </Grid>

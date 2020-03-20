@@ -216,6 +216,17 @@ namespace Jezgro.ViewModels
             this.Slika = string.Empty;
         }
 
+
+        // SlikaCommand
+        private DelegateCommand _slikaCommand;
+        public DelegateCommand SlikaCommand =>
+            _slikaCommand ?? (_slikaCommand = new DelegateCommand(ExecuteSlikaCommand));
+
+        void ExecuteSlikaCommand()
+        {
+            Views.Slika s = new Views.Slika(this.Slika, this.Sifra + " " +this.Naziv);
+            s.Show();
+        }
         #endregion
 
         #region Ctor
@@ -327,6 +338,10 @@ namespace Jezgro.ViewModels
                }
                 
            }
+            else
+            {
+                this.Jm = "par";
+            }
 
 
             OsveziVelicineZaIzbor();

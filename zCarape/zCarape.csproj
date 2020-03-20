@@ -12,7 +12,14 @@
     <Page Remove="Slike\**" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="Images\Add.png" />
+    <None Remove="Images\Delete.png" />
+    <None Remove="Images\edit.png" />
     <None Remove="Images\LeftGreen.png" />
+    <None Remove="Images\save.png" />
+    <None Remove="Images\SaveBlack.png" />
+    <None Remove="Images\SaveBlueGray.png" />
+    <None Remove="Images\Undo.png" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Prism.DryIoc" Version="7.2.0.1422" />
@@ -25,6 +32,13 @@
     <ProjectReference Include="..\zCarape.Services\zCarape.Services.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Images\Add.png" />
+    <Resource Include="Images\Delete.png" />
+    <Resource Include="Images\edit.png" />
     <Resource Include="Images\LeftGreen.png" />
+    <Resource Include="Images\save.png" />
+    <Resource Include="Images\SaveBlack.png" />
+    <Resource Include="Images\SaveBlueGray.png" />
+    <Resource Include="Images\Undo.png" />
   </ItemGroup>
 </Project>

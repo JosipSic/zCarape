@@ -14,5 +14,6 @@ namespace zCarape.Core
         public static string Predajnica = "Predajnica";
         public static string Velicine = "Velicine";
         public static string ArtikliEdit = "ArtikliEdit";
+        public static string DezeniEdit = "DezeniEdit";
     }
 }

@@ -29,11 +29,21 @@ namespace zCarape.Services.Interfaces
 
         IEnumerable<Artikal> GetAllArtikli();
 
-        IEnumerable<DezenArtikla> GetDezeniArtikla(long artikalID);
-
         long InsertOrUpdateArtikal(Artikal artikal);
 
+
         #endregion //Artikli
+
+        #region DezeniArtikala
+        DezenArtikla GetDezenArtikla(long dezenArtiklaID);
+
+        long InsertOrUpdateDezenArtikla(DezenArtikla dezenArtikla);
+
+        IEnumerable<DezenArtikla> GetDezeniArtikla(long artikalID);
+
+        bool IzbrisiDezenArtikla(long id);
+
+        #endregion //DezeniArtikala
 
         #region Velicine
 

@@ -34,13 +34,13 @@
           </GroupBox.Header>
           <StackPanel Margin="0,10,0,0">
             <TextBlock Text="Knjigovodstvena šifra"/>
-            <TextBox Text="{Binding Sifra}" Width="100"  HorizontalAlignment="Left"/>
+            <TextBox Name="SifraTextBox" Text="{Binding Sifra}" Width="100"  HorizontalAlignment="Left" KeyUp="ObavezanTextBox_KeyUp"/>
 
             <TextBlock Text="Naziv" Margin="0,10,0,0"/>
-            <TextBox Text="{Binding Naziv}" MinWidth="250" TextWrapping="WrapWithOverflow"/>
+            <TextBox Text="{Binding Naziv}" MinWidth="250" TextWrapping="WrapWithOverflow" KeyUp="ObavezanTextBox_KeyUp"/>
 
             <TextBlock Text="Jm" Margin="0,10,0,0"/>
-            <TextBox Text="{Binding Jm}" Width="50" HorizontalAlignment="Left"/>
+            <TextBox Text="{Binding Jm}" Width="50" HorizontalAlignment="Left" KeyUp="ObavezanTextBox_KeyUp"/>
 
             <TextBlock Text="Bar kod" Margin="0,10,0,0"/>
             <TextBox Text="{Binding BarKod}"/>
@@ -58,7 +58,11 @@
               <RowDefinition Height="*"/>
               <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <Image Grid.Row="0" Stretch="Uniform" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Source="{Binding PunaPutanjaDoSlike}"/>
+            <Image Grid.Row="0" Stretch="Uniform" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Source="{Binding PunaPutanjaDoSlike}">
+              <Image.InputBindings>
+                <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding SlikaCommand}"/>
+              </Image.InputBindings>
+            </Image>
             <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" >
               <Button Margin="10,5" Content="Dodaj sliku" Padding="10,0" Command="{Binding DodajSlikuCommand}"/>
               <Button Margin="10,5" Content="Ukloni sliku" Padding="10,0" Command="{Binding UkloniSlikuCommand}"/>
@@ -106,8 +110,18 @@
         
         <!-- Snimi, Odustani -->
         <StackPanel Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal">
-          <Button Content="Snimi" VerticalAlignment="Center" Margin="10,0" Padding="10" Width="258" Command="{Binding SnimiCommand}"/>
-          <Button Content="Odustani" VerticalAlignment="Center"  Padding="10" Width="258" Command="{Binding OdustaniCommand}"/>
+          <Button  VerticalAlignment="Center" Margin="10,0"  Width="258" Command="{Binding SnimiCommand}" Height="38">
+            <StackPanel Orientation="Horizontal">
+              <Image Source="pack://application:,,,/zCarape;component/Images/SaveBlueGray.png" Stretch="Uniform"/>
+              <TextBlock Text="Snimi" VerticalAlignment="Center" Margin="15,0"/>
+            </StackPanel>
+          </Button>
+          <Button  VerticalAlignment="Center"   Width="258" Command="{Binding OdustaniCommand}" Height="38">
+            <StackPanel Orientation="Horizontal">
+              <Image Source="pack://application:,,,/zCarape;component/Images/Undo.png" Stretch="Uniform"/>
+              <TextBlock Text="Odustani" VerticalAlignment="Center" Margin="15,0"/>
+            </StackPanel>
+          </Button>
         </StackPanel>
       </Grid>
 

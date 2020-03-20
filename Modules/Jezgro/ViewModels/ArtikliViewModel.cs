@@ -3,6 +3,7 @@ using Prism.Commands;
 using Prism.Ioc;
 using Prism.Mvvm;
 using Prism.Regions;
+using Prism.Services.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -21,6 +22,7 @@ namespace Jezgro.ViewModels
         #region Fields
         private readonly IDbService _dbService;
         private readonly IRegionManager _regionManager;
+        private readonly IDialogService _dialogService;
         private ICollectionView _artikliCollectionView;
 
         #endregion //Fields ---------------------------------------------------------
@@ -67,8 +69,21 @@ namespace Jezgro.ViewModels
                         PunaPutanjaDoSlike = string.Empty;
                     else
                         PunaPutanjaDoSlike = Path.Combine(GlobalniKod.SlikeDir, value.Slika);
+                    IsSelectedArtikal = true;
+                }
+                else
+                {
+                    IsSelectedArtikal = false;
                 }
             }
+        }
+
+        // IsSelectedArtikal
+        private bool _isSelectedArtikal;
+        public bool IsSelectedArtikal
+        {
+            get { return _isSelectedArtikal; }
+            set { SetProperty(ref _isSelectedArtikal, value); }
         }
 
         // FilterArtikliString
@@ -119,6 +134,56 @@ namespace Jezgro.ViewModels
             NavigationParameters navPar = new NavigationParameters();
             navPar.Add("ArtikalID", SelectedArtikal.ID);
             _regionManager.RequestNavigate(RegionNames.ContentRegion, ViewNames.ArtikliEdit, navPar);
+        }
+
+        // EditDezenCommand
+        private DelegateCommand<long?> _editDezenCommand;
+        public DelegateCommand<long?> EditDezenCommand =>
+            _editDezenCommand ?? (_editDezenCommand = new DelegateCommand<long?>(ExecuteEditDezenCommand));
+
+        void ExecuteEditDezenCommand(long? param)
+        {
+            if (SelectedArtikal==null)
+            {
+                return;
+            }
+
+            GlobalniKod.DezenParam.Blanko();
+            GlobalniKod.DezenParam.ArtikalID = SelectedArtikal.ID;
+            GlobalniKod.DezenParam.ArtikalSifra = SelectedArtikal.Sifra;
+            GlobalniKod.DezenParam.ArtikalNaziv = SelectedArtikal.Naziv;
+            GlobalniKod.DezenParam.DezenArtiklaID = param==null ? 0 : (long)param;
+
+            DezeniEdit dezeniEdit = new DezeniEdit();
+            GlobalniKod.DezenParam.Window = dezeniEdit;
+            dezeniEdit.ShowDialog();
+
+            if (!GlobalniKod.DezenParam.VracenBezPromene)
+            {
+                PopuniDezeneSelektovanogArtikla();
+            }
+        }
+
+        // SlikaCommand
+        private DelegateCommand<string> _slikaCommand;
+        public DelegateCommand<string> SlikaCommand =>
+            _slikaCommand ?? (_slikaCommand = new DelegateCommand<string>(ExecuteSlikaCommand));
+
+        void ExecuteSlikaCommand(string image)
+        {
+            if (image==null)
+            {
+                if (!string.IsNullOrWhiteSpace(this.SelectedArtikal.Slika))
+                {
+                    Views.Slika s = new Views.Slika(this.SelectedArtikal.Slika, this.SelectedArtikal.Sifra + " " + this.SelectedArtikal.Naziv);
+                    s.Show();
+                }
+            }
+            else if (!string.IsNullOrWhiteSpace(image))
+            {
+                Views.Slika s = new Views.Slika(image, this.SelectedArtikal.Sifra + " " + this.SelectedArtikal.Naziv);
+                s.Show();
+            }
         }
         #endregion
 
@@ -182,10 +247,11 @@ namespace Jezgro.ViewModels
 
         #region Ctor
 
-        public ArtikliViewModel(IDbService dbService, IRegionManager regionManager)
+        public ArtikliViewModel(IDbService dbService, IRegionManager regionManager, IDialogService dialogService)
         {
             _dbService = dbService;
             _regionManager = regionManager;
+            _dialogService = dialogService;
         }
 
         #endregion //Ctor
