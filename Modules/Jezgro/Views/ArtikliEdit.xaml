@@ -42,8 +42,8 @@
             <TextBlock Text="Jm" Margin="0,10,0,0"/>
             <TextBox Text="{Binding Jm}" Width="50" HorizontalAlignment="Left" KeyUp="ObavezanTextBox_KeyUp"/>
 
-            <TextBlock Text="Bar kod" Margin="0,10,0,0"/>
-            <TextBox Text="{Binding BarKod}"/>
+            <TextBlock Text="Bar kod" Margin="0,10,0,0" Visibility="Hidden"/>
+            <TextBox Text="{Binding BarKod}" Visibility="Hidden"/>
 
           </StackPanel>
         </GroupBox>
@@ -110,6 +110,17 @@
         
         <!-- Snimi, Odustani -->
         <StackPanel Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal">
+          <StackPanel.Resources>
+            <Style TargetType="{x:Type Image}">
+              <Style.Triggers>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type UIElement}, AncestorLevel=1}, Path=IsEnabled}"
+                             Value="False">
+                  <Setter Property="Opacity"
+                            Value="0.25" />
+                </DataTrigger>
+              </Style.Triggers>
+            </Style>
+          </StackPanel.Resources>
           <Button  VerticalAlignment="Center" Margin="10,0"  Width="258" Command="{Binding SnimiCommand}" Height="38">
             <StackPanel Orientation="Horizontal">
               <Image Source="pack://application:,,,/zCarape;component/Images/SaveBlueGray.png" Stretch="Uniform"/>
@@ -122,6 +133,13 @@
               <TextBlock Text="Odustani" VerticalAlignment="Center" Margin="15,0"/>
             </StackPanel>
           </Button>
+          <Button  VerticalAlignment="Center" Margin="90,0,0,0"  Width="80" Command="{Binding IzbrisiCommand}" Height="28">
+            <StackPanel Orientation="Horizontal">
+              <Image Source="pack://application:,,,/zCarape;component/Images/Delete.png" Stretch="Uniform" Margin="4"/>
+              <TextBlock Text="Izbriši" VerticalAlignment="Center" Margin="7,0"/>
+            </StackPanel>
+          </Button>
+
         </StackPanel>
       </Grid>
 

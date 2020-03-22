@@ -47,6 +47,14 @@ namespace Jezgro.ViewModels
             set { SetProperty(ref _opis, value); }
         }
 
+        //Putanja
+        private string _putanja;
+        public string Putanja
+        {
+            get { return _putanja; }
+            set { SetProperty(ref _putanja, value); }
+        }
+
         //Slika1
         private string _slika1;
         public string Slika1
@@ -102,7 +110,9 @@ namespace Jezgro.ViewModels
                 string novoIme = imeSlike;
                 while (File.Exists(Path.Combine(GlobalniKod.SlikeDir, novoIme)))
                 {
-                    novoIme = imeSlike + string.Format("_{0}", ++dodatak);
+                    string imeSlikeBezEkstenzije = Path.GetFileNameWithoutExtension(imeSlike);
+                    string ekstenzija = Path.GetExtension(imeSlike);
+                    novoIme = imeSlikeBezEkstenzije + string.Format("_{0}", ++dodatak) + ekstenzija ;
                 }
 
                 File.Copy(openFileDialog.FileName, Path.Combine(GlobalniKod.SlikeDir, novoIme));
@@ -180,6 +190,7 @@ namespace Jezgro.ViewModels
                 ArtikalID = this._artikalID,
                 Naziv = this.Naziv,
                 Opis = this.Opis,
+                Putanja = this.Putanja,
                 Slika1 = this.Slika1,
                 Slika2 = this.Slika2,
                 Slika3 = this.Slika3,
@@ -241,6 +252,11 @@ namespace Jezgro.ViewModels
 
         private bool UslovZaUpis()
         {
+            if (string.IsNullOrWhiteSpace(Naziv))
+            {
+                MessageBox.Show("Polje \"Naziv\" je obavezno.");
+            }
+
             return _artikalID > 0 && !string.IsNullOrWhiteSpace(Naziv);
         }
 
@@ -287,7 +303,7 @@ namespace Jezgro.ViewModels
                 }
             }
 
-            CanExecuteIzbrisiCommand();
+            IzbrisiCommand.RaiseCanExecuteChanged();
         }
 
 
@@ -300,6 +316,7 @@ namespace Jezgro.ViewModels
                 this._artikalID = dezenArtikla.ArtikalID;
                 this.Naziv = dezenArtikla.Naziv;
                 this.Opis = dezenArtikla.Opis;
+                this.Putanja = dezenArtikla.Putanja;
                 this.Slika1 = dezenArtikla.Slika1;
                 this.Slika2 = dezenArtikla.Slika2;
                 this.Slika3 = dezenArtikla.Slika3;

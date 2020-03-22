@@ -5,7 +5,7 @@
              xmlns:core="clr-namespace:zCarape.Core;assembly=zCarape.Core"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="Jezgro.Views.DezeniEdit"
              prism:ViewModelLocator.AutoWireViewModel="True" WindowStartupLocation="CenterScreen"
-             Background="LightBlue"   Width="800" Height="550" Title="{Binding Caption}" WindowStyle="ToolWindow">
+             Background="LightBlue"   Width="800" Height="600" Title="{Binding Caption}" WindowStyle="ToolWindow">
   <Window.Resources>
     <core:SlikaToPunaPutanjaKonverter x:Key="SlikaKonverter"/>
   </Window.Resources>
@@ -22,6 +22,7 @@
         <RowDefinition Height="Auto"/>
         <RowDefinition Height="Auto"/>
         <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
         <RowDefinition Height="*"/>
       </Grid.RowDefinitions>
 
@@ -35,7 +36,7 @@
       <Border Grid.Row="1" Grid.RowSpan="2" Grid.Column="0" BorderBrush="Black" BorderThickness="1" CornerRadius="10" Margin="5"/>
       <Border Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" BorderBrush="Black" BorderThickness="1" CornerRadius="10" Margin="5"/>
       <Border Grid.Row="1" Grid.RowSpan="2" Grid.Column="2" BorderBrush="Black" BorderThickness="1" CornerRadius="10" Margin="5"/>
-      <Image Grid.Row="1" Grid.Column="0" Stretch="Uniform" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Source="{Binding Slika1, Converter={StaticResource SlikaKonverter}}" Margin="7,7,7,0"/>
+      <Image Grid.Row="1" Grid.Column="0" Stretch="Uniform" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Source="{Binding Slika1, Converter={StaticResource SlikaKonverter}}" Margin="7,7,7,0" />
       <Image Grid.Row="1" Grid.Column="1" Stretch="Uniform" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Source="{Binding Slika2, Converter={StaticResource SlikaKonverter}}" Margin="7,7,7,0"/>
       <Image Grid.Row="1" Grid.Column="2" Stretch="Uniform" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Source="{Binding Slika3, Converter={StaticResource SlikaKonverter}}" Margin="7,7,7,0"/>
 
@@ -54,15 +55,21 @@
         <Button Margin="10,5" Content="Ukloni sliku" Padding="4,0" Command="{Binding UkloniSlikuCommand}" CommandParameter="3"/>
       </StackPanel>
 
-      <!-- Opis -->
+      <!-- Putanja -->
       <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" Margin="0,15,0,0">
+        <TextBlock Text="Fajla sa dezenom:"/>
+        <TextBox Margin="10,0,0,0" Text="{Binding Putanja}" MinWidth="420" MaxWidth="720"/>
+      </StackPanel>
+      
+      <!-- Opis -->
+      <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" Margin="0,15,0,0">
         <TextBlock Text="Detaljan opis i bliže instrukcije "/>
         <TextBlock Text="(opciono):" FontStyle="Italic"/>
       </StackPanel>
-      <TextBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" TextWrapping="Wrap" MinHeight="66" Text="{Binding Opis}" AcceptsReturn="True"/>
+      <TextBox Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3" TextWrapping="Wrap" MinHeight="66" Text="{Binding Opis}" AcceptsReturn="True"/>
 
       <!-- Snimi, Odustani -->
-      <StackPanel Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2"  Orientation="Horizontal" HorizontalAlignment="Right">
+      <StackPanel Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2"  Orientation="Horizontal" HorizontalAlignment="Right">
         <StackPanel.Resources>
           <Style TargetType="{x:Type Image}">
             <Style.Triggers>

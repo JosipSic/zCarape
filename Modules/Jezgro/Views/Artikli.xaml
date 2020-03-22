@@ -67,11 +67,11 @@
             <TextBlock Text="{Binding SelectedArtikal.Sifra}" FontWeight="DemiBold"/>
             <TextBlock Text="Jm:" Margin="10,0,5,0"/>
             <TextBlock Text="{Binding SelectedArtikal.Jm}" FontWeight="DemiBold"/>
-            <TextBlock Text="Bar kod:" Margin="10,0,5,0"/>
-            <TextBlock Text="{Binding SelectedArtikal.BarKod}" FontWeight="DemiBold"/>
+            <TextBlock Text="Bar kod:" Margin="10,0,5,0" Visibility="Hidden"/>
+            <TextBlock Text="{Binding SelectedArtikal.BarKod}" FontWeight="DemiBold" Visibility="Hidden"/>
           </StackPanel>
           <StackPanel>
-            <TextBlock Text="{Binding SelectedArtikal.Naziv}" FontWeight="DemiBold" FontSize="40"/>
+            <TextBlock Text="{Binding SelectedArtikal.Naziv}" FontWeight="DemiBold" FontSize="40" TextWrapping="Wrap"/>
           </StackPanel>
 
           <!-- Velicine koje se prave -->
@@ -134,7 +134,7 @@
       </Grid>
       
       <!-- Dezeni -->
-      <GroupBox Grid.Row="1" Header="Dezeni:" FontSize="18"  FontWeight="SemiBold" Background="AliceBlue"  Margin="5" BorderBrush="Transparent" Visibility="{Binding IsSelectedArtikal, Converter={StaticResource BooleanToVisibleConverter}}">
+      <GroupBox Grid.Row="1" Header="Dezeni:" FontSize="18"  FontWeight="SemiBold" Background="AliceBlue"  Margin="5" BorderBrush="Transparent" >
         <ScrollViewer>
         <StackPanel>
           <StackPanel.Resources>
@@ -197,7 +197,7 @@
             </ItemsControl>
             
             <!-- Dodaj novi dezen -->
-            <Button Width="150" Height="150" Command="{Binding EditDezenCommand}" Background="Transparent" BorderBrush="Transparent" >
+            <Button Width="150" Height="150" Command="{Binding EditDezenCommand}" Background="Transparent" BorderBrush="Transparent" Visibility="{Binding IsSelectedArtikal, Converter={StaticResource BooleanToVisibleConverter}}">
               <Button.Triggers>
                 <EventTrigger RoutedEvent="Button.MouseEnter">
                   <BeginStoryboard>
@@ -233,6 +233,8 @@
                 </TextBlock>
               </StackPanel>
             </Button>
+          <!-- Poruka ako nije izabrani ni jedan artikal -->
+            <TextBlock Text="{Binding TextIsNotSelected}" FontSize="20" Foreground="Gray" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="WrapWithOverflow" Visibility="{Binding IsNotSelectedArtikal, Converter={StaticResource BooleanToVisibleConverter}}" />
 
           </StackPanel>
         </ScrollViewer>

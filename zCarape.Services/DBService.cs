@@ -13,9 +13,142 @@ namespace zCarape.Services
 {
     public class DBService : IDbService
     {
+        private bool checkIfColumnExists(string tableName, string columnName)
+        {
+            using (var conn = new SQLiteConnection(GlobalniKod.ConnectionString))
+            {
+                conn.Open();
+                var cmd = conn.CreateCommand();
+                cmd.CommandText = string.Format("PRAGMA table_info({0})", tableName);
+
+                var reader = cmd.ExecuteReader();
+                int nameIndex = reader.GetOrdinal("Name");
+                while (reader.Read())
+                {
+                    if (reader.GetString(nameIndex).Equals(columnName))
+                    {
+                        conn.Close();
+                        return true;
+                    }
+                }
+                conn.Close();
+            }
+            return false;
+        }
+
+        private void postaviBrojVerzijeUBazi(int verzija)
+        {
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+            cmd.Parameters.AddWithValue("@naziv", "DBVER");
+            cmd.Parameters.AddWithValue("@vrednost", verzija);
+
+            cmd.CommandText = "UPDATE param SET vrednost=@vrednost WHERE naziv=@naziv";
+
+            cmd.ExecuteNonQuery();
+        }
+
         public bool TestConnection(out string poruka)
         {
-            throw new NotImplementedException();
+            int _verzijaBaze = 0;
+
+            poruka = string.Empty;
+            // Prvo proveravam da li fizicki postoji na lokaciji
+            if (!File.Exists(GlobalniKod.BazaPath))
+            {
+                poruka = string.Format("Baza \"{0}\" ne postoji na trazenoj lokaciji.", GlobalniKod.BazaPath);
+                return false;
+            }
+
+            // Proveravam da li koristim zahtevanu verziju
+            // 1 - Da li postoji tabela Param i red sa Nazivom Verzija i ako ne postoji kreiram je
+            bool tabelaParamPostoji = false;
+            try
+            {
+                using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+                con.Open();
+                using var cmd = new SQLiteCommand(con);
+
+                // Da li postoji tabela Param
+                cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='param'";
+                tabelaParamPostoji = cmd.ExecuteNonQuery() == 1;
+                if (!tabelaParamPostoji)
+                {
+                    cmd.CommandText = "CREATE TABLE IF NOT EXISTS 'Param' ('Naziv' TEXT NOT NULL,'Vrednost' INTEGER NOT NULL, PRIMARY KEY('Naziv'))";
+                    cmd.ExecuteNonQuery();
+                }
+
+                // Da li postoji red DBVER
+                cmd.Parameters.AddWithValue("@naziv", "DBVER");
+                cmd.CommandText = "SELECT COUNT(*) FROM Param WHERE Naziv=@naziv";
+                int count = Convert.ToInt32(cmd.ExecuteScalar());
+                if (count == 0)
+                {
+                    cmd.CommandText = "INSERT INTO Param(naziv,vrednost) VALUES (@naziv,0)";
+                    cmd.ExecuteNonQuery();
+                }
+
+            }
+            catch (System.Exception ex)
+            {
+                poruka = ex.Message;
+                return false;
+            }
+
+            // Koju verziju koristim
+            try
+            {
+                using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+                con.Open();
+
+                using var cmd = new SQLiteCommand(con);
+                cmd.CommandText = "SELECT vrednost FROM Param WHERE naziv=@naziv";
+                cmd.Parameters.AddWithValue("@naziv", "DBVER");
+
+                _verzijaBaze = Convert.ToInt32(cmd.ExecuteScalar());
+
+            }
+            catch (Exception ex)
+            {
+                poruka = ex.Message;
+                return false;
+            }
+
+            // Nadogradnja baze
+            int potrebnaVezija = 1;
+            if (_verzijaBaze < potrebnaVezija)
+            {
+                string tabela;
+                string polje;
+
+                // dodajem polje Putanja u tabelu DezeniArtikla
+                tabela = "DezeniArtikla";
+                polje = "Putanja";
+                if (!checkIfColumnExists(tabela,polje))
+                {
+                    bool ok=false;
+                    try
+                    {
+                        using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+                        con.Open();
+
+                        using var cmd = new SQLiteCommand(con);
+                        cmd.CommandText = $"ALTER TABLE {tabela} ADD COLUMN {polje} TEXT";
+                        cmd.ExecuteNonQuery();
+                        ok = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        poruka = ex.Message;
+                    }
+
+                    if (ok) postaviBrojVerzijeUBazi(potrebnaVezija);
+                }
+            }
+
+            return true;
         }
 
         #region Masine
@@ -344,6 +477,40 @@ namespace zCarape.Services
 
         }
 
+        public bool IzbrisiArtikal(long artikalID)
+        {
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+            using var cmd = new SQLiteCommand(con);
+            cmd.Parameters.AddWithValue("@artikalid", artikalID);
+
+            bool izbrisan = false;
+            // Otvaram transakciju
+            cmd.CommandText = "begin";
+            cmd.ExecuteNonQuery();
+
+            try
+            {
+                cmd.CommandText = "DELETE FROM velicineartikla WHERE ArtikalID = @artikalid";
+                cmd.ExecuteNonQuery();
+
+                cmd.CommandText = "DELETE FROM DezeniArtikla WHERE ArtikalID = @artikalid";
+                cmd.ExecuteNonQuery();
+
+                cmd.CommandText = "DELETE FROM artikli WHERE id=@artikalid";
+                izbrisan = cmd.ExecuteNonQuery()==1;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(String.Format($"nMessage: {ex.Message}"),"Greska",MessageBoxButton.OK,MessageBoxImage.Error,MessageBoxResult.OK);
+            }
+
+            // Kraj transakcije
+            cmd.CommandText = "end";
+            cmd.ExecuteNonQuery();
+
+            return izbrisan;
+        }
 
         #endregion
 
@@ -359,6 +526,7 @@ namespace zCarape.Services
             cmd.Parameters.AddWithValue("@artikalid", dezenArtikla.ArtikalID);
             cmd.Parameters.AddWithValue("@naziv", dezenArtikla.Naziv);
             cmd.Parameters.AddWithValue("@opis", dezenArtikla.Opis);
+            cmd.Parameters.AddWithValue("@putanja", dezenArtikla.Putanja);
             cmd.Parameters.AddWithValue("@slika1", dezenArtikla.Slika1);
             cmd.Parameters.AddWithValue("@slika2", dezenArtikla.Slika2);
             cmd.Parameters.AddWithValue("@slika3", dezenArtikla.Slika3);
@@ -396,7 +564,7 @@ namespace zCarape.Services
             else
             {
                 cmd.Parameters.AddWithValue("@id", dezenArtikla.ID);
-                cmd.CommandText = "UPDATE dezeniartikla SET artikalid=@artikalid, naziv=@naziv,  opis=@opis, slika1=@slika1 " +
+                cmd.CommandText = "UPDATE dezeniartikla SET artikalid=@artikalid, naziv=@naziv,  opis=@opis, putanja=@putanja, slika1=@slika1 " +
                     ",slika2=@slika2, slika3=@slika3, aktivan=@aktivan WHERE id=@id";
                 try
                 {
@@ -447,6 +615,7 @@ namespace zCarape.Services
                             ArtikalID = (long)dr["artikalid"], 
                             Naziv = (string)dr["naziv"],
                             Opis = (dr["opis"] == DBNull.Value) ? string.Empty : (string)dr["opis"],
+                            Putanja = (dr["putanja"] == DBNull.Value) ? string.Empty : (string)dr["putanja"],
                             Slika1 = (dr["slika1"] == DBNull.Value) ? string.Empty : (string)dr["slika1"],
                             Slika2 = (dr["slika2"] == DBNull.Value) ? string.Empty : (string)dr["slika2"],
                             Slika3 = (dr["slika3"] == DBNull.Value) ? string.Empty : (string)dr["slika3"],
@@ -480,6 +649,7 @@ namespace zCarape.Services
                     ArtikalID = (long)dr["artikalid"],
                     Naziv = (string)dr["naziv"],
                     Opis = (dr["opis"] == DBNull.Value) ? string.Empty : (string)dr["opis"],
+                    Putanja = (dr["putanja"] == DBNull.Value) ? string.Empty : (string)dr["putanja"],
                     Slika1 = (dr["slika1"] == DBNull.Value) ? string.Empty : (string)dr["slika1"],
                     Slika2 = (dr["slika2"] == DBNull.Value) ? string.Empty : (string)dr["slika2"],
                     Slika3 = (dr["slika3"] == DBNull.Value) ? string.Empty : (string)dr["slika3"],
@@ -680,7 +850,6 @@ namespace zCarape.Services
 
             return lista;
         }
-
 
         public bool InsertOrUpdateVelicineArtikla(long artikalID, IEnumerable<long> noveVelicineID)
         {

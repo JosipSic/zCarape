@@ -83,8 +83,20 @@ namespace Jezgro.ViewModels
         public bool IsSelectedArtikal
         {
             get { return _isSelectedArtikal; }
-            set { SetProperty(ref _isSelectedArtikal, value); }
+            set { 
+                SetProperty(ref _isSelectedArtikal, value);
+                IsNotSelectedArtikal = !value; 
+            }
         }
+
+        // IsSelectedArtikal
+        private bool _isNotSelectedArtikal = true;
+        public bool IsNotSelectedArtikal
+        {
+            get { return _isNotSelectedArtikal; }
+            set { SetProperty(ref _isNotSelectedArtikal, value); }
+        }
+
 
         // FilterArtikliString
         private string _filterArtikliString;
@@ -105,6 +117,14 @@ namespace Jezgro.ViewModels
         {
             get { return _punaPutanjaDoSlike; }
             set { SetProperty(ref _punaPutanjaDoSlike, value); }
+        }
+
+        // TextIsNotSelected
+        private string _textIsNotSelected = "Izaberite artikal za prikaz ili unesite novi";
+        public string TextIsNotSelected
+        {
+            get { return _textIsNotSelected; }
+            set { SetProperty(ref _textIsNotSelected, value); }
         }
 
 
@@ -260,7 +280,49 @@ namespace Jezgro.ViewModels
 
         public void OnNavigatedTo(NavigationContext navigationContext)
         {
-            FormirajSpisakArtikala();
+            var artikalID = navigationContext.Parameters["ArtikalID"];
+
+            if (artikalID==null)
+            {
+                if (SelectedArtikal==null)
+                {
+                    FormirajSpisakArtikala();
+                }
+                return;
+            }
+
+            var jeIzbrisan = navigationContext.Parameters["JeIzbrisan"];
+            bool deleted = false;
+            if (jeIzbrisan!=null)
+            {
+                deleted = (bool)jeIzbrisan;
+            }
+
+            long id = (long)artikalID;
+
+            // Ako je parametar ArtikalID=0 onda nista nije menjano
+            if (id!=0)
+            {
+                if (deleted)
+                {
+                    TextIsNotSelected = String.Format("Artikal {0} {1} je izbrisan!", SelectedArtikal.Sifra, SelectedArtikal.Naziv);
+                }
+
+                FormirajSpisakArtikala();
+
+                if (deleted)
+                {
+                    SelectedArtikal = null;
+                }
+                else
+                {
+                    Artikal editovanArtikal = Artikli.FirstOrDefault(a => a.ID == id);
+                    if (editovanArtikal.ID!=0)
+                    {
+                        SelectedArtikal = editovanArtikal;
+                    }
+                }
+            }
         }
 
         public bool IsNavigationTarget(NavigationContext navigationContext)

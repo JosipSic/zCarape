@@ -16,6 +16,13 @@ namespace Jezgro.ViewModels
 {
     public class ArtikliEditViewModel : BindableBase, INavigationAware, IRegionMemberLifetime
     {
+        enum AkcijaEnum
+        {
+            Odustani,
+            Snimi,
+            Izbrisi
+        }
+
         #region Fields
         private readonly IDbService _dbService;
         private readonly IRegionManager _regionManager;
@@ -131,7 +138,7 @@ namespace Jezgro.ViewModels
             {
                 _loadedID = odgovor;
                 SnimiVelicine();
-                NazadIUkloniViewIzMemorije();
+                NazadIUkloniViewIzMemorije(AkcijaEnum.Snimi);
             }
         }
 
@@ -142,8 +149,36 @@ namespace Jezgro.ViewModels
 
         void ExecuteOdustaniCommand()
         {
-            NazadIUkloniViewIzMemorije();
+            NazadIUkloniViewIzMemorije(AkcijaEnum.Odustani);
         }
+
+        //Izbrisi Command
+        private DelegateCommand _izbrisiCommand;
+        public DelegateCommand IzbrisiCommand =>
+            _izbrisiCommand ?? (_izbrisiCommand = new DelegateCommand(ExecuteIzbrisiCommand, CanExecuteIzbrisiCommand));
+
+        private bool CanExecuteIzbrisiCommand()
+        {
+            return this._loadedID > 0;
+        }
+
+        void ExecuteIzbrisiCommand()
+        {
+            if (this._loadedID == 0)
+            {
+                return;
+            }
+
+            if (MessageBox.Show("Da li ste sigurni da želite da izbrišete ovaj artikal?\nBrisanjem artikal obrisaćete i sve njegove dezene!", "Brisanje", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No)
+                == MessageBoxResult.Yes)
+            {
+                if (_dbService.IzbrisiArtikal(this._loadedID))
+                {
+                    NazadIUkloniViewIzMemorije(AkcijaEnum.Izbrisi);
+                }
+            }
+        }
+
 
         // KreirajNovuVelicinuCommand
         private DelegateCommand _kreirajNovuVelicinuCommand;
@@ -294,10 +329,14 @@ namespace Jezgro.ViewModels
             _dbService.InsertOrUpdateVelicineArtikla(_loadedID, velicineZaUpis);
         }
 
-        private void NazadIUkloniViewIzMemorije()
+        private void NazadIUkloniViewIzMemorije(AkcijaEnum izvrsenaAkcija)
         {
+            NavigationParameters navPar = new NavigationParameters();
+            navPar.Add("ArtikalID", izvrsenaAkcija == AkcijaEnum.Odustani ? 0 : _loadedID);
+            navPar.Add("JeIzbrisan", izvrsenaAkcija == AkcijaEnum.Izbrisi);
+
             _keepAlive = false;
-            _regionManager.RequestNavigate(RegionNames.ContentRegion, ViewNames.Artikli);
+            _regionManager.RequestNavigate(RegionNames.ContentRegion, ViewNames.Artikli, navPar);
         }
 
         private void UcitajArtikal(long artikalID)
@@ -343,6 +382,7 @@ namespace Jezgro.ViewModels
                 this.Jm = "par";
             }
 
+            IzbrisiCommand.RaiseCanExecuteChanged();
 
             OsveziVelicineZaIzbor();
         }

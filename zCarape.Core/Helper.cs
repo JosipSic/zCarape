@@ -27,5 +27,7 @@ namespace zCarape.Core
                 return DateTime.MinValue;
             }
         }
+
     }
+
 }

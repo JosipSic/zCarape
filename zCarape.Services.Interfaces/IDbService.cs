@@ -31,6 +31,8 @@ namespace zCarape.Services.Interfaces
 
         long InsertOrUpdateArtikal(Artikal artikal);
 
+        bool IzbrisiArtikal(long artikalID);
+
 
         #endregion //Artikli
 
