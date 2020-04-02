@@ -59,21 +59,20 @@ namespace Jezgro.ViewModels
         {
             get { return _selectedArtikal; }
             set {
-                if (_selectedArtikal!=value)
+                if (_selectedArtikal != value)
                 {
                     SetProperty(ref _selectedArtikal, value);
                     PopuniVelicineSelektovanogArtikla();
                     PopuniDezeneSelektovanogArtikla();
-                   
-                    if (string.IsNullOrWhiteSpace(value.Slika))
-                        PunaPutanjaDoSlike = string.Empty;
+
+                    if (_selectedArtikal == null)
+                    {
+                        IsSelectedArtikal = false;
+                    }
                     else
-                        PunaPutanjaDoSlike = Path.Combine(GlobalniKod.SlikeDir, value.Slika);
-                    IsSelectedArtikal = true;
-                }
-                else
-                {
-                    IsSelectedArtikal = false;
+                    {
+                        IsSelectedArtikal = true;
+                    }
                 }
             }
         }
@@ -89,7 +88,7 @@ namespace Jezgro.ViewModels
             }
         }
 
-        // IsSelectedArtikal
+        // IsNotSelectedArtikal
         private bool _isNotSelectedArtikal = true;
         public bool IsNotSelectedArtikal
         {
@@ -109,14 +108,6 @@ namespace Jezgro.ViewModels
                     _artikliCollectionView.Refresh();
                 }
             }
-        }
-
-        // PunaPutanjaDoSlike
-        private string _punaPutanjaDoSlike;
-        public string PunaPutanjaDoSlike
-        {
-            get { return _punaPutanjaDoSlike; }
-            set { SetProperty(ref _punaPutanjaDoSlike, value); }
         }
 
         // TextIsNotSelected

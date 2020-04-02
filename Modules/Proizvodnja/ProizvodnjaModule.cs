@@ -25,6 +25,9 @@ namespace Proizvodnja
             containerRegistry.RegisterForNavigation<RadniNalogUnos, RadniNalogUnosViewModel>();
             containerRegistry.RegisterForNavigation<Izvestaji, IzvestajiViewModel>();
             containerRegistry.RegisterForNavigation<Predajnica, PredajnicaViewModel>();
+            containerRegistry.RegisterForNavigation<NoviRN1Artikal, NoviRN1ArtikalViewModel>();
+            containerRegistry.RegisterForNavigation<NoviRN2Dezen, NoviRN2DezenViewModel>();
+            containerRegistry.RegisterForNavigation<NoviRN3, NoviRN3ViewModel>();
 
             // Za svaki View vezujem odgovarajuci ViewModel (kod radi i bez toga posto sledi Prizm konvenziju, ali je ovako brze posto nema potrebe da se koristi refleksija
             ViewModelLocationProvider.Register<Proizvodnja.Views.MasineURadu, Proizvodnja.ViewModels.MasineURaduViewModel>();
@@ -32,6 +35,8 @@ namespace Proizvodnja
             ViewModelLocationProvider.Register<RadniNalogUnos, RadniNalogUnosViewModel>();
             ViewModelLocationProvider.Register<Izvestaji, IzvestajiViewModel>();
             ViewModelLocationProvider.Register<Predajnica, PredajnicaViewModel>();
+            ViewModelLocationProvider.Register<NoviRN2Dezen, NoviRN2DezenViewModel>();
+            ViewModelLocationProvider.Register<NoviRN3, NoviRN3ViewModel>();
 
             // Servisi
             // containerRegistry.RegisterSingleton<IDbService, DBService>(); //Ovaj servis se registruje u glavnom zCarapeProjektu

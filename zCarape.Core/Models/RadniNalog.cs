@@ -8,8 +8,8 @@ namespace zCarape.Core.Models
     {
         public long ID { get; set; }
         public long ArtikalID { get; set; }
+        public long DezenArtiklaID { get; set; }
         public long VelicinaID { get; set; }
-        public long DezenArtikalID { get; set; }
         public long Cilj { get; set; }
         public long Napravljeno { get; set; }
         public string Opis { get; set; }

@@ -1,8 +1,20 @@
 ﻿<UserControl x:Class="Proizvodnja.Views.MasineURadu"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:prism="http://prismlibrary.com/"             
+             xmlns:prism="http://prismlibrary.com/"  
+             xmlns:core="clr-namespace:zCarape.Core;assembly=zCarape.Core"
              prism:ViewModelLocator.AutoWireViewModel="True">
+  <UserControl.Resources>
+    <core:SlikaToPunaPutanjaKonverter x:Key="SlikaToPunaPutanjaKonverter"/>
+    <core:MultiParametersConverter x:Key="MultiParametersConverter"/>
+    <core:ZeroIfEmptyConverter x:Key="ZeroIfEmptyConverter"/>
+    <DataTemplate x:Key="ListaRadnikaTemplate">
+      <StackPanel Orientation="Horizontal">
+        <TextBlock Text="{Binding Prezime}"/>
+        <TextBlock Text="{Binding Ime}" Margin="5,0,0,0"/>
+      </StackPanel>
+    </DataTemplate>
+  </UserControl.Resources>
     <Grid>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
       <ItemsControl ItemsSource="{Binding Path=MasineURadu}" HorizontalContentAlignment="Stretch">
@@ -14,7 +26,7 @@
              <StackPanel Orientation="Horizontal">
                 <Border BorderBrush="{x:Null}"  Width="40" Background="AliceBlue">
                   <Viewbox>
-                  <TextBlock Text="{Binding Path=MasinaNaziv}"  Padding="1,0" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" >
+                  <TextBlock Text="{Binding Path=MasinaNaziv}"   HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" >
                     <TextBlock.LayoutTransform>
                       <RotateTransform Angle="-90"/>
                     </TextBlock.LayoutTransform>
@@ -22,8 +34,9 @@
                 </Viewbox>
                 </Border>
 
+               <!-- Lista zadataka za jednu masinu -->
                 <StackPanel Orientation="Horizontal" >
-                <ListBox ItemsSource="{Binding Path=NaloziURadu}" >
+                <ListBox ItemsSource="{Binding Path=Zadaci}">
                   <ListBox.ItemsPanel>
                   <ItemsPanelTemplate>
                     <StackPanel Orientation="Horizontal"/>
@@ -31,9 +44,11 @@
                   </ListBox.ItemsPanel>
                 <ListBox.ItemTemplate>
                   <DataTemplate>
-                    <Grid Width="450">
+                    <Grid Width="Auto">
                       <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" MinWidth="50"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
                         <ColumnDefinition/>
                         <ColumnDefinition/>
                         <ColumnDefinition/>
@@ -59,30 +74,107 @@
                       <TextBlock Grid.Row="7" Grid.Column="0" Text="Uradjeno"/>
                       <TextBlock Grid.Row="8" Grid.Column="0" Text="Fali"/>
 
-                      <TextBlock Grid.Row="2" Grid.Column="1" FontWeight="Bold" Text="{Binding Path=RadniNalogID}"/>
-                      <TextBlock Grid.Row="3" Grid.Column="1" FontWeight="SemiBold" Text="{Binding Path=ArtikalNaziv}"/>
-                      <TextBlock Grid.Row="4" Grid.Column="1" FontWeight="SemiBold" Text="{Binding Path=ArtikalVelicina}"/>
-                      <TextBlock Grid.Row="5" Grid.Column="1" FontWeight="SemiBold" Text="{Binding Path=ArtikalDezen}"/>
-                      <TextBlock Grid.Row="6" Grid.Column="1" FontWeight="SemiBold" Text="{Binding Path=Cilj}"/>
+                      <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal">
+                        <TextBlock  FontWeight="Bold" Text="{Binding Path=NalogURadu.RadniNalogID}"/>
+                            <Button Command="{Binding DataContext.EditNalogCommand, RelativeSource ={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding NalogURadu.RadniNalogID}"  Height="25" Background="Transparent" BorderBrush="Transparent">
+                          <Image Source="pack://application:,,,/zCarape;component/Images/edit.png" />
+                        </Button>
+                       </StackPanel>
+                      <TextBlock Grid.Row="3" Grid.Column="1" FontWeight="SemiBold" Text="{Binding Path=NalogURadu.ArtikalNaziv}"/>
+                      <TextBlock Grid.Row="4" Grid.Column="1" FontWeight="SemiBold" Text="{Binding Path=NalogURadu.ArtikalVelicina}"/>
+                      <TextBlock Grid.Row="5" Grid.Column="1" FontWeight="SemiBold" Text="{Binding Path=NalogURadu.ArtikalDezen}"/>
+                      <TextBlock Grid.Row="6" Grid.Column="1" FontWeight="SemiBold" Text="{Binding Path=NalogURadu.Cilj}"/>
 
-                      <TextBlock Grid.Row="9" Grid.ColumnSpan="4" Text="{Binding Path=PutanjaFajla}" TextAlignment="Center"/>
+                      <TextBlock Grid.Row="9" Grid.ColumnSpan="4" Text="{Binding Path=NalogURadu.PutanjaFajla}" TextAlignment="Center"/>
 
-                      <Image Grid.Row="1" Grid.RowSpan="8" Grid.Column="2" Stretch="Uniform" Source="{Binding Path=Slika}" MaxHeight="150"/>
-
-                      <StackPanel Grid.Row="1" Grid.RowSpan="8" Grid.Column="3" Margin="5">
-                        <TextBlock Text="Predato:"/>
-                      </StackPanel>
+                      <Image Grid.Row="1" Grid.RowSpan="8" Grid.Column="2" Stretch="Uniform" Source="{Binding Path=NalogURadu.Slika1,Converter={StaticResource SlikaToPunaPutanjaKonverter}}" MaxHeight="150">
+                        <Image.InputBindings>
+                              <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType=UserControl}, Path=DataContext.SlikaCommand}" >
+                                <MouseBinding.CommandParameter>
+                                  <MultiBinding Converter="{StaticResource MultiParametersConverter}">
+                                    <Binding Path="NalogURadu.Slika1"/>
+                                    <Binding Path="NalogURadu"/>
+                                  </MultiBinding>
+                                </MouseBinding.CommandParameter>
+                              </MouseBinding>
+                        </Image.InputBindings>
+                      </Image>
                       
-                    </Grid>
+                      <Image Grid.Row="1" Grid.RowSpan="8" Grid.Column="3" Stretch="Uniform" Source="{Binding Path=NalogURadu.Slika2,Converter={StaticResource SlikaToPunaPutanjaKonverter}}" MaxHeight="150">
+                        <Image.InputBindings>
+                              <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType=UserControl}, Path=DataContext.SlikaCommand}"  >
+                                <MouseBinding.CommandParameter>
+                                  <MultiBinding Converter="{StaticResource MultiParametersConverter}">
+                                    <Binding Path="NalogURadu.Slika2"/>
+                                    <Binding Path="NalogURadu"/>
+                                  </MultiBinding>
+                                </MouseBinding.CommandParameter>
+                              </MouseBinding>
+                        </Image.InputBindings>
+                      </Image>
+
+                      <Image Grid.Row="1" Grid.RowSpan="8" Grid.Column="4" Stretch="Uniform" Source="{Binding Path=NalogURadu.Slika3,Converter={StaticResource SlikaToPunaPutanjaKonverter}}" MaxHeight="150">
+                        <Image.InputBindings>
+                              <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType=UserControl}, Path=DataContext.SlikaCommand}" >
+                                <MouseBinding.CommandParameter>
+                                  <MultiBinding Converter="{StaticResource MultiParametersConverter}">
+                                    <Binding Path="NalogURadu.Slika3"/>
+                                    <Binding Path="NalogURadu"/>
+                                  </MultiBinding>
+                                </MouseBinding.CommandParameter>
+                              </MouseBinding>
+                        </Image.InputBindings>
+                      </Image>
+
+                      <!-- Predato -->
+                      <Border Grid.Row="1" Grid.RowSpan="8" Grid.Column="5" BorderBrush="Black" BorderThickness="1" VerticalAlignment="Top" Margin="0,10,0,0">
+                      <Grid>
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition/>
+                              <ColumnDefinition/>
+                              <ColumnDefinition/>
+                              <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                              <RowDefinition Height="Auto"/>
+                              <RowDefinition Height="Auto"/>
+                              <RowDefinition Height="Auto"/>
+                              <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Column="0" Text="Smena" Margin="5,0"/>
+                            <TextBlock Grid.Column="1" Text="1.klasa" Margin="5,0"/>
+                            <TextBlock Grid.Column="2" Text="2.klasa" Margin="5,0"/>
+                            <TextBlock Grid.Column="3" Text="Radnik" Margin="5,0"/>
+
+                            <TextBlock Grid.Row="1" Text="I" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="2" Text="II" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="3" Text="III" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+
+                            <TextBox Grid.Column="1" Grid.Row="1" Text="{Binding PrvaSmena1kl, Converter={StaticResource ZeroIfEmptyConverter}, StringFormat=#}" HorizontalContentAlignment="Right" core:NumberOnlyBehaviour.IsEnabled="True"/>
+                              <TextBox Grid.Column="1" Grid.Row="2" Text="{Binding DrugaSmena1kl, Converter={StaticResource ZeroIfEmptyConverter}, StringFormat=#}" HorizontalContentAlignment="Right" core:NumberOnlyBehaviour.IsEnabled="True"/>
+                              <TextBox Grid.Column="1" Grid.Row="3" Text="{Binding TrecaSmena1kl, Converter={StaticResource ZeroIfEmptyConverter}, StringFormat=#}" HorizontalContentAlignment="Right" core:NumberOnlyBehaviour.IsEnabled="True"/>
+
+                              <TextBox Grid.Column="2" Grid.Row="1" Text="{Binding PrvaSmena2kl, Converter={StaticResource ZeroIfEmptyConverter}, StringFormat=#}" HorizontalContentAlignment="Right" core:NumberOnlyBehaviour.IsEnabled="True"/>
+                              <TextBox Grid.Column="2" Grid.Row="2" Text="{Binding DrugaSmena2kl, Converter={StaticResource ZeroIfEmptyConverter}, StringFormat=#}" HorizontalContentAlignment="Right" core:NumberOnlyBehaviour.IsEnabled="True"/>
+                              <TextBox Grid.Column="2" Grid.Row="3" Text="{Binding TrecaSmena2kl, Converter={StaticResource ZeroIfEmptyConverter}, StringFormat=#}" HorizontalContentAlignment="Right" core:NumberOnlyBehaviour.IsEnabled="True"/>
+
+                              <ComboBox Grid.Column="3" Grid.Row="1" ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.Radnici}" ItemTemplate="{StaticResource ListaRadnikaTemplate}" SelectedValuePath="ID" SelectedValue="{Binding PrvaSmenaRadnikID}"/>
+
+                              <ComboBox Grid.Column="3" Grid.Row="2" ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.Radnici}" ItemTemplate="{StaticResource ResourceKey=ListaRadnikaTemplate}" SelectedValuePath="ID" SelectedValue="{Binding DrugaSmenaRadnikID}"/>
+                        
+                              <ComboBox Grid.Column="3" Grid.Row="3"  ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.Radnici}" ItemTemplate="{StaticResource ResourceKey=ListaRadnikaTemplate}" SelectedValuePath="ID" SelectedValue="{Binding TrecaSmenaRadnikID}" />
+                            </Grid>
+                          </Border>
+                        </Grid>
 
                   </DataTemplate>
                 </ListBox.ItemTemplate>
                 </ListBox>
                 </StackPanel>
 
-                <Path Stretch="Fill" Margin="40,0" Width="50" Height="50"
+                <!--<Path Stretch="Fill" Margin="40,0" Width="50" Height="50"
               Fill="Green"   
-              Data="M4.1561281,2.2702953 L4.8524521,2.2702954 4.8509674,3.963097 5.8969377,3.9630803 5.8969378,5.0916036 4.8524628,5.1061913 4.8524521,6.7843885 4.1561281,6.7843887 4.1559771,5.0877741 3.1116421,5.0916036 3.1116421,3.9630803 4.1556735,3.9654722 4.1561281,2.2702953 z"/>
+              Data="M4.1561281,2.2702953 L4.8524521,2.2702954 4.8509674,3.963097 5.8969377,3.9630803 5.8969378,5.0916036 4.8524628,5.1061913 4.8524521,6.7843885 4.1561281,6.7843887 4.1559771,5.0877741 3.1116421,5.0916036 3.1116421,3.9630803 4.1556735,3.9654722 4.1561281,2.2702953 z"/>-->
 
             </StackPanel>
 

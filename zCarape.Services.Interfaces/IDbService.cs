@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using System.Text;
 using zCarape.Core.Models;
+using zCarape.Core.Business;
 
 namespace zCarape.Services.Interfaces
 {
     public interface IDbService
     {
         bool TestConnection(out string poruka);
+        bool NadogradiBazu(out string poruka);
+
 
         #region Masine
         IEnumerable<Masina> GetAllMasine();
@@ -21,6 +24,11 @@ namespace zCarape.Services.Interfaces
         bool DeleteMasina(long id);
 
         IEnumerable<MasinaURadu> GetAllMasineURadu();
+
+        IEnumerable<AngazovanaMasina> GetAngazovaneMasinePoRadnomNalogu(long radniNalogID);
+
+        bool InsertOrUpdateAngazovaneMasine(long radniNalogID, IEnumerable<long> masineID);
+
         #endregion //Masine
 
         #region Artikli
@@ -63,6 +71,22 @@ namespace zCarape.Services.Interfaces
         IEnumerable<VelicinaArtikla> GetFromVelicineArtikla(long artikalID);
 
         bool InsertOrUpdateVelicineArtikla(long artikalID, IEnumerable<long> velicineID);
+        #endregion
+
+        #region RadniNalozi
+
+        long InsertOrUpdateRadniNalog(RadniNalog radniNalog);
+
+        RadniNalog GetRadniNalog(long radniNalogID);
+
+        bool DeleteRadniNalog(long radniNalogID);
+
+        #endregion
+
+        #region
+
+        IEnumerable<Lice> GetAllAktivnaLica();
+
         #endregion
     }
 }

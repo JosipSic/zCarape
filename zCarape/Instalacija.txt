@@ -1,0 +1,5 @@
+﻿Preuzeti bazu iz proizvodnje i modifikovati:
+1-Polje u jednoj tabeli je BLOB umesto INTEGER (Mislim da je tabela RadniNalog) - ispraviti
+2-Obrisati tabelu Predajnica pre izmena 3
+3-Pustiti izmene
+4-Popuniti rucno tabelu radnici

@@ -4,14 +4,13 @@ using System.Text;
 
 namespace zCarape.Core.Models
 {
-    public class Masina
+    public class Lice
     {
         public long ID { get; set; }
-        public string Naziv { get; set; }
-        public string Opis { get; set; }
-        public string Slika { get; set; }
+        public string Ime { get; set; }
+        public string Prezime { get; set; }
+        public string RadnoMesto { get; set; }
         public bool Aktivan { get; set; }
-        public long RadniNalogID { get; set; }
         public DateTime VremeUnosa { get; set; }
     }
 }

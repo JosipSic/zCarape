@@ -9,7 +9,7 @@
       <Button Content="Proizvodnja po mašinama" Margin="4,0,0,0" FontSize="14"
               Command="{Binding NavigateCommand}" CommandParameter="MasineURadu"/>
       <Button Content="Novi radni nalog" Margin="4,0,0,0" FontSize="14"
-              Command="{Binding NavigateCommand}" CommandParameter="RadniNalogUnos"/>
+              Command="{Binding NavigateCommand}" CommandParameter="NoviRN1Artikal"/>
       <Button Content="Artikli" Margin="4,0,0,0" FontSize="14"
               Command="{Binding NavigateCommand}" CommandParameter="Artikli"/>
       <Button Content="Mašine" Margin="4,0,0,0" FontSize="14"

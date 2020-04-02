@@ -9,6 +9,22 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\zCarape.Services.Interfaces\zCarape.Services.Interfaces.csproj" />
-    <ProjectReference Include="..\..\zCarape.Services\zCarape.Services.csproj" />
+    <ProjectReference Include="..\Jezgro\Jezgro.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Views\NoviRN1Artikal.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\NoviRN2Dezen.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\NoviRN1Artikal.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\NoviRN2Dezen.xaml">
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
 </Project>

@@ -27,6 +27,7 @@ namespace Jezgro.Views
             InitializeComponent();
             _slikaSaPunomPutanjom = System.IO.Path.Combine(GlobalniKod.SlikeDir, slika);
             OpisTextBlock.Text = opis;
+            PathTextBlock.Text = path;
             Loaded += Slika_Loaded;
         }
 

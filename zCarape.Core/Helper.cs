@@ -9,8 +9,9 @@ namespace zCarape.Core
     {
         public static DateTime ConvertToDateTimeFromSqLite(string str)
         {
-            string pattern = @"(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})\.(\d{3})";
-            if (Regex.IsMatch(str, pattern))
+            string pattern = @"(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})";
+            string bezMilisekundi = str.Substring(0, 19);
+            if (Regex.IsMatch(bezMilisekundi, pattern))
             {
                 Match match = Regex.Match(str, pattern);
                 int year = Convert.ToInt32(match.Groups[1].Value);
@@ -19,7 +20,7 @@ namespace zCarape.Core
                 int hour = Convert.ToInt32(match.Groups[4].Value);
                 int minute = Convert.ToInt32(match.Groups[5].Value);
                 int second = Convert.ToInt32(match.Groups[6].Value);
-                int millisecond = Convert.ToInt32(match.Groups[7].Value);
+                int millisecond = 0;
                 return new DateTime(year, month, day, hour, minute, second, millisecond);
             }
             else

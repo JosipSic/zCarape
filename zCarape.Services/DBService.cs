@@ -6,29 +6,38 @@ using System.Text;
 using System.Windows;
 using zCarape.Core;
 using zCarape.Core.Models;
+using zCarape.Core.Business;
 using zCarape.Services.Interfaces;
 using System.Linq;
+using System.ComponentModel;
+using Prism.Ioc;
 
 namespace zCarape.Services
 {
     public class DBService : IDbService
     {
+
+        #region Odrzavanje
         private bool checkIfColumnExists(string tableName, string columnName)
         {
             using (var conn = new SQLiteConnection(GlobalniKod.ConnectionString))
             {
                 conn.Open();
-                var cmd = conn.CreateCommand();
-                cmd.CommandText = string.Format("PRAGMA table_info({0})", tableName);
+                using (var cmd = conn.CreateCommand())
+                { 
+                    cmd.CommandText = string.Format("PRAGMA table_info({0})", tableName);
 
-                var reader = cmd.ExecuteReader();
-                int nameIndex = reader.GetOrdinal("Name");
-                while (reader.Read())
-                {
-                    if (reader.GetString(nameIndex).Equals(columnName))
+                    using (var reader = cmd.ExecuteReader())
                     {
-                        conn.Close();
-                        return true;
+                        int nameIndex = reader.GetOrdinal("Name");
+                        while (reader.Read())
+                        {
+                            if (reader.GetString(nameIndex).Equals(columnName, StringComparison.CurrentCultureIgnoreCase))
+                            {
+                                conn.Close();
+                                return true;
+                            }
+                        }
                     }
                 }
                 conn.Close();
@@ -50,10 +59,32 @@ namespace zCarape.Services
             cmd.ExecuteNonQuery();
         }
 
+        private bool dodajPoljeUTabelu(string tabela, string polje, string cmdText)
+        {
+            bool uspeh = true;
+            if (!checkIfColumnExists(tabela, polje))
+            {
+
+                try
+                {
+                    using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+                    con.Open();
+
+                    using var cmd = new SQLiteCommand(con);
+                    cmd.CommandText = cmdText;
+                    cmd.ExecuteNonQuery();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                    uspeh = false;
+                }
+            }
+            return uspeh;
+        }
+
         public bool TestConnection(out string poruka)
         {
-            int _verzijaBaze = 0;
-
             poruka = string.Empty;
             // Prvo proveravam da li fizicki postoji na lokaciji
             if (!File.Exists(GlobalniKod.BazaPath))
@@ -62,8 +93,8 @@ namespace zCarape.Services
                 return false;
             }
 
-            // Proveravam da li koristim zahtevanu verziju
-            // 1 - Da li postoji tabela Param i red sa Nazivom Verzija i ako ne postoji kreiram je
+            //Proveravam da li koristim zahtevanu verziju
+            //1 - Da li postoji tabela Param i red sa Nazivom Verzija i ako ne postoji kreiram je
             bool tabelaParamPostoji = false;
             try
             {
@@ -97,6 +128,13 @@ namespace zCarape.Services
                 return false;
             }
 
+            return true;
+        }
+
+        public bool NadogradiBazu(out string poruka)
+        {
+            poruka = string.Empty;
+            int _verzijaBaze = 0;
             // Koju verziju koristim
             try
             {
@@ -117,46 +155,124 @@ namespace zCarape.Services
             }
 
             // Nadogradnja baze
-            int potrebnaVezija = 1;
+            bool sveJeOK = true;
+            int potrebnaVezija;
+
+            // Verzija 2
+            potrebnaVezija = 2;
             if (_verzijaBaze < potrebnaVezija)
             {
-                string tabela;
-                string polje;
+                string tabela, polje, cmdText;
 
+                ;
                 // dodajem polje Putanja u tabelu DezeniArtikla
                 tabela = "DezeniArtikla";
                 polje = "Putanja";
-                if (!checkIfColumnExists(tabela,polje))
+                cmdText= string.Format($"ALTER TABLE {tabela} ADD COLUMN {polje} TEXT");
+                if (!dodajPoljeUTabelu(tabela, polje, cmdText)) { sveJeOK = false; }
+
+                // dodajem polje RadniNalogID u tabelu Masine
+                tabela = "Masine";
+                polje = "RadniNalogID";
+                cmdText = string.Format($"ALTER TABLE {tabela} ADD COLUMN {polje} INTEGER NOT NULL DEFAULT 0");
+                if (!dodajPoljeUTabelu(tabela, polje, cmdText)) { sveJeOK = false; }
+
+
+                //  kreiram tabelu AngazovaneMasine
+                try
                 {
-                    bool ok=false;
-                    try
-                    {
-                        using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
-                        con.Open();
-
-                        using var cmd = new SQLiteCommand(con);
-                        cmd.CommandText = $"ALTER TABLE {tabela} ADD COLUMN {polje} TEXT";
-                        cmd.ExecuteNonQuery();
-                        ok = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        poruka = ex.Message;
-                    }
-
-                    if (ok) postaviBrojVerzijeUBazi(potrebnaVezija);
+                    using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+                    con.Open();
+                    using var cmd = new SQLiteCommand(con);
+                    cmd.CommandText = "CREATE TABLE IF NOT EXISTS 'AngazovaneMasine' (" +
+                                        "'ID' INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," +
+                                        "'RadniNalogID' INTEGER NOT NULL," +
+                                        "'MasinaID' INTEGER NOT NULL," +
+                                        "'Status' INTEGER NOT NULL DEFAULT 1," +
+                                        "'Redosled' INTEGER NOT NULL DEFAULT 1000," +
+                                        "FOREIGN KEY('RadniNalogID') REFERENCES 'RadniNalozi'('ID')," +
+                                        "FOREIGN KEY('MasinaID') REFERENCES 'Masine'('ID'))";
+                    cmd.ExecuteNonQuery();
                 }
+                catch (System.Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                    sveJeOK = false;
+                }
+
+
+                if (sveJeOK) postaviBrojVerzijeUBazi(potrebnaVezija);
             }
 
-            return true;
+            // Verzija 3
+            potrebnaVezija = 3;
+            if (_verzijaBaze < potrebnaVezija)
+            {
+                //  kreiram tabelu Lica
+                try
+                {
+                    using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+                    con.Open();
+                    using var cmd = new SQLiteCommand(con);
+                    cmd.CommandText = "CREATE TABLE IF NOT EXISTS 'Lica' (" +
+                                        "'ID' INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," +
+                                        "'Ime' TEXT NOT NULL," +
+                                        "'Prezime' TEXT," +
+                                        "'RadnoMesto' TEXT," +
+                                        "'Aktivan' INTEGER NOT NULL DEFAULT 1," +
+                                        "'VremeUnosa' TEXT NOT NULL DEFAULT current_timestamp)";
+                    cmd.ExecuteNonQuery();
+                }
+                catch (System.Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                    sveJeOK = false;
+                }
+
+
+                //  kreiram tabelu Predajnice
+                try
+                {
+                    using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+                    con.Open();
+                    using var cmd = new SQLiteCommand(con);
+                    cmd.CommandText = "CREATE TABLE IF NOT EXISTS 'Predajnice' (" +
+                                        "'ID' INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," +
+                                        "'RadniNalogID' INTEGER NOT NULL," +
+                                        "'MasinaID' INTEGER NOT NULL," +
+                                        "'Datum' Text NOT NULL," +
+                                        "'Smena' INTEGER NOT NULL," +
+                                        "'LiceID' INTEGER NOT NULL," +
+                                        "'Kolicina' INTEGER NOT NULL," +
+                                        "'DrugaKl' INTEGER NOT NULL," +
+                                        "'VremeUnosa' TEXT NOT NULL DEFAULT current_timestamp,"+
+                                        "FOREIGN KEY('RadniNalogID') REFERENCES 'RadniNalozi'('ID')," +
+                                        "FOREIGN KEY('LiceID') REFERENCES 'Lica'('ID')," +
+                                        "FOREIGN KEY('MasinaID') REFERENCES 'Masine'('ID'))";
+                    cmd.ExecuteNonQuery();
+                }
+                catch (System.Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                    sveJeOK = false;
+                }
+
+
+                if (sveJeOK) postaviBrojVerzijeUBazi(potrebnaVezija);
+            }
+
+            return sveJeOK;
         }
+
+        #endregion //PrivatneMetode
 
         #region Masine
         public IEnumerable<MasinaURadu> GetAllMasineURadu()
         {
             List<MasinaURadu> masineURadu = new List<MasinaURadu>();
 
-            // Za testiranje
+            #region Za testiranje
+            /*
             string slika1 =  Path.Combine(GlobalniKod.SlikeDir, "Bebino_Hulahop.jpg");
             string slika2 = Path.Combine(GlobalniKod.SlikeDir, "Muska_Termo_Carapa.jpg");
             string slika3 = Path.Combine(GlobalniKod.SlikeDir, "Muška sportska čarapa.jpg");
@@ -196,9 +312,116 @@ namespace zCarape.Services
                     new NalogURadu() { RadniNalogID=104, ArtikalID=26, ArtikalNaziv="Hulahop lovacki", ArtikalVelicina="univerzalna", ArtikalDezen="Rebrast", Cilj=100, PutanjaFajla=@"2020\156\Hulahop\Lovacki\Rebrast", Slika=slika5},
                 }
             });
+            */
+
+            #endregion
+
+            // Masine koje imaju aktivne radne naloge
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+            cmd.CommandText = "SELECT Masine.ID as MasinaID, Masine.Naziv as MasinaNaziv," +
+                "RadniNalozi.ID as RadniNalogID, RadniNalozi.ArtikalID, RadniNalozi.Cilj, RadniNalozi.HItno," +
+                "RadniNalozi.Status as StatusNaloga, Artikli.Sifra as ArtikalSifra," +
+                "Artikli.Naziv as ArtikalNaziv, Velicine.Oznaka as ArtikalVelicina, DezeniArtikla.Naziv as ArtikalDezen," +
+                "DezeniArtikla.Slika1, DezeniArtikla.Slika2, DezeniArtikla.Slika3, DezeniArtikla.Putanja as PutanjaFajla," +
+                "AngazovaneMasine.Redosled, AngazovaneMasine.Status as StatusMasine " +
+                "FROM Masine " +
+                "INNER JOIN AngazovaneMasine ON  AngazovaneMasine.MasinaID = Masine.ID " +
+                "INNER JOIN RadniNalozi ON RadniNalozi.ID = AngazovaneMasine.RadniNalogID " +
+                "INNER JOIN Artikli ON RadniNalozi.ArtikalID = Artikli.ID " +
+                "INNER JOIN Velicine ON RadniNalozi.VelicinaID = Velicine.ID " +
+                "INNER JOIN DezeniArtikla ON RadniNalozi.DezenArtiklaID = DezeniArtikla.ID " +
+                "WHERE RadniNalozi.Status != 9 " +
+                "ORDER BY Masine.Naziv, RadniNalozi.Status, AngazovaneMasine.Redosled, RadniNalozi.ID";
+
+            using SQLiteDataReader dr = cmd.ExecuteReader();
+
+            if (dr.HasRows)
+            {
+                long masinaID;
+                string masinaNaziv;
+                long radniNalogID;
+                long artikalID;
+                long cilj;
+                bool hitno;
+                byte statusNaloga;
+                string artikalSifra;
+                string artikalNaziv;
+                string artikalVelicina;
+                string artikalDezen;
+                string slika1;
+                string slika2;
+                string slika3;
+                string putanjaFajla;
+                int redosled;
+                byte statusMasine;
+
+                while (dr.Read())
+                {
+                    masinaID = (long)dr["masinaID"];
+                    masinaNaziv = (dr["masinaNaziv"] == DBNull.Value) ? string.Empty : (string)dr["masinaNaziv"];
+                    radniNalogID = (long)dr["radniNalogID"];
+                    artikalID = (long)dr["artikalID"];
+                    cilj = (long)dr["cilj"];
+                    hitno = (long)dr["hitno"]==1; 
+                    statusNaloga = (byte)(long)dr["statusNaloga"];
+                    artikalSifra = (dr["artikalSifra"] == DBNull.Value) ? string.Empty : (string)dr["artikalSifra"];
+                    artikalNaziv = (dr["artikalNaziv"] == DBNull.Value) ? string.Empty : (string)dr["artikalNaziv"];
+                    artikalVelicina = (dr["artikalVelicina"] == DBNull.Value) ? string.Empty : (string)dr["artikalVelicina"];
+                    artikalDezen = (dr["artikalDezen"] == DBNull.Value) ? string.Empty : (string)dr["artikalDezen"];
+                    slika1 = (dr["slika1"] == DBNull.Value) ? string.Empty : (string)dr["slika1"];
+                    slika2 = (dr["slika2"] == DBNull.Value) ? string.Empty : (string)dr["slika2"];
+                    slika3 = (dr["slika3"] == DBNull.Value) ? string.Empty : (string)dr["slika3"];
+                    putanjaFajla = (dr["putanjaFajla"] == DBNull.Value) ? string.Empty : (string)dr["putanjaFajla"];
+                    redosled = (int)(long)dr["redosled"];
+                    statusMasine = (byte)(long)dr["statusMasine"];
+
+                    // Masina
+                    MasinaURadu masinaURadu = masineURadu.FirstOrDefault(m => m.MasinaID == masinaID);
+                    if (masinaURadu==null)
+                    {
+                        masinaURadu = new MasinaURadu() { MasinaID = masinaID, MasinaNaziv = masinaNaziv, Zadaci = new List<Zadatak>() };
+                        masineURadu.Add(masinaURadu);
+                    }
+
+                    // Radni nalog koji se dodaje jednoj ili na vise masina
+                    NalogURadu nalogURadu = (from m in masineURadu
+                                            from z in m.Zadaci
+                                            where z.NalogURadu.RadniNalogID == radniNalogID
+                                            select z.NalogURadu).FirstOrDefault();
+                    if (nalogURadu==null)
+                    {
+                        nalogURadu = new NalogURadu()
+                        {
+                            RadniNalogID = radniNalogID,
+                            Cilj = cilj,
+                            Hitno = hitno,
+                            StatusNaloga = statusNaloga,
+                            ArtikalID = artikalID,
+                            ArtikalSifra = artikalSifra,
+                            ArtikalNaziv = artikalNaziv,
+                            ArtikalVelicina = artikalVelicina,
+                            ArtikalDezen = artikalDezen,
+                            Slika1 = slika1,
+                            Slika2 = slika2,
+                            Slika3 = slika3,
+                            PutanjaFajla = putanjaFajla
+                        };
+                    }
+
+                    // Zadaci
+                    masinaURadu.Zadaci.Add(new Zadatak()
+                    {
+                        StatusMasine = statusMasine,
+                        Redosled = redosled,
+                        NalogURadu = nalogURadu
+                    } ); 
+                }
+            }
 
             return masineURadu;
-
         }
 
         public IEnumerable<Masina> GetAllMasine()
@@ -216,14 +439,13 @@ namespace zCarape.Services
             {
                 while (dr.Read())
                 {
-
-
                     lista.Add(new Masina()
                     {
                         ID = (long)dr["id"],
                         Naziv = (string)dr["naziv"],
                         Opis = (dr["opis"] == DBNull.Value) ? string.Empty : (string)dr["opis"],
                         Slika = (dr["slika"] == DBNull.Value) ? string.Empty : (string)dr["slika"],
+                        RadniNalogID = (long)dr["radninalogid"],
                         Aktivan = (long)dr["aktivan"] ==1
                     }); ;
                     
@@ -326,6 +548,103 @@ namespace zCarape.Services
                 return null;
             }
         }
+
+        public IEnumerable<AngazovanaMasina> GetAngazovaneMasinePoRadnomNalogu(long radniNalogID)
+        {
+            List<AngazovanaMasina> lista = new List<AngazovanaMasina>();
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+            cmd.CommandText = "SELECT * FROM AngazovaneMasine WHERE RadniNalogID=@radninalogID";
+            cmd.Parameters.AddWithValue("@radninalogID", radniNalogID);
+
+            try
+            {
+                using SQLiteDataReader dr = cmd.ExecuteReader();
+
+                if (dr.HasRows)
+                {
+
+                    while (dr.Read())
+                    {
+
+                        lista.Add(new AngazovanaMasina()
+                        {
+                            ID = (long)dr["id"],
+                            RadniNalogID = (long)dr["radninalogid"],
+                            MasinaID = (long)dr["MasinaID"],
+                            Status = (byte)(long)dr["status"],
+                            Redosled = (int)(long)dr["redosled"]
+                        }); ;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message + "\n" + ex.Source);
+            }
+
+            return lista;
+        }
+
+        public bool InsertOrUpdateAngazovaneMasine(long radniNalogID, IEnumerable<long> noveMasineID)
+        {
+            if (radniNalogID == 0)
+            {
+                MessageBox.Show("radninalogID ne moze biti 0. Poruka iz procedure InsertOrUpdateAngazovaneMasine", "Nije moguce snimiti angazovane masine");
+                return false;
+            }
+
+            //1-Iz baze ucitavam sve angazovane masine za trazeni radni nalog
+            IEnumerable<AngazovanaMasina> izBaze = GetAngazovaneMasinePoRadnomNalogu(radniNalogID);
+
+            //2-Brisem uklonjene masine (iz kolekcije izBaze sve zapise koji nemaju MasinaID da se nalazi u kolekciji masineID)
+            var uklonjeneMasine = from am in izBaze
+                                    where am.RadniNalogID == radniNalogID && !noveMasineID.Contains(am.MasinaID)
+                                    select am.ID;
+
+            foreach (long uklonjenID in uklonjeneMasine)
+            {
+                using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+                con.Open();
+                using var cmd = new SQLiteCommand(con);
+                cmd.Parameters.AddWithValue("@id", uklonjenID);
+                cmd.CommandText = "DELETE FROM angazovanemasine WHERE id=@id";
+                cmd.ExecuteNonQuery();
+            }
+
+            //3-Dodajem nove angazovane masine
+            var dodateMasine = from m in noveMasineID
+                                 where !izBaze.Any(b => b.MasinaID == m)
+                                 select m;
+
+            foreach (long dodataMasinaID in dodateMasine)
+            {
+                insertAngazovanaMasina(radniNalogID, dodataMasinaID);
+            }
+
+            return true;
+        }
+
+        private long insertAngazovanaMasina(long radniNalogID, long masinaID)
+        {
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+            cmd.Parameters.AddWithValue("@radninalogid", radniNalogID);
+            cmd.Parameters.AddWithValue("@masinaid", masinaID);
+
+            cmd.CommandText = "INSERT INTO angazovanemasine (radninalogid,masinaid) VALUES (@radninalogid,@masinaid)";
+
+            if (cmd.ExecuteNonQuery() == 1)
+                return con.LastInsertRowId;
+            else
+                return 0;
+
+        }
+
 
         public bool MasinaImaZavisneZapise(long id)
         {
@@ -474,7 +793,6 @@ namespace zCarape.Services
 
             }
             return artikal.ID;
-
         }
 
         public bool IzbrisiArtikal(long artikalID)
@@ -637,27 +955,35 @@ namespace zCarape.Services
             cmd.CommandText = "SELECT * FROM DezeniArtikla WHERE ID=@id";
             cmd.Parameters.AddWithValue("@id", dezenArtiklaID);
 
-            using SQLiteDataReader dr = cmd.ExecuteReader(System.Data.CommandBehavior.SingleRow);
-
-            if (dr.HasRows)
+            try
             {
-                dr.Read();
+                using SQLiteDataReader dr = cmd.ExecuteReader(System.Data.CommandBehavior.SingleRow);
 
-                return new DezenArtikla()
+                if (dr.HasRows)
                 {
-                    ID = (long)dr["id"],
-                    ArtikalID = (long)dr["artikalid"],
-                    Naziv = (string)dr["naziv"],
-                    Opis = (dr["opis"] == DBNull.Value) ? string.Empty : (string)dr["opis"],
-                    Putanja = (dr["putanja"] == DBNull.Value) ? string.Empty : (string)dr["putanja"],
-                    Slika1 = (dr["slika1"] == DBNull.Value) ? string.Empty : (string)dr["slika1"],
-                    Slika2 = (dr["slika2"] == DBNull.Value) ? string.Empty : (string)dr["slika2"],
-                    Slika3 = (dr["slika3"] == DBNull.Value) ? string.Empty : (string)dr["slika3"],
-                    VremeUnosa = Helper.ConvertToDateTimeFromSqLite((string)dr["vremeunosa"])
-                };
+                    dr.Read();
+
+                    return new DezenArtikla()
+                    {
+                        ID = (long)dr["id"],
+                        ArtikalID = (long)dr["artikalid"],
+                        Naziv = (string)dr["naziv"],
+                        Opis = (dr["opis"] == DBNull.Value) ? string.Empty : (string)dr["opis"],
+                        Putanja = (dr["putanja"] == DBNull.Value) ? string.Empty : (string)dr["putanja"],
+                        Slika1 = (dr["slika1"] == DBNull.Value) ? string.Empty : (string)dr["slika1"],
+                        Slika2 = (dr["slika2"] == DBNull.Value) ? string.Empty : (string)dr["slika2"],
+                        Slika3 = (dr["slika3"] == DBNull.Value) ? string.Empty : (string)dr["slika3"],
+                        VremeUnosa = Helper.ConvertToDateTimeFromSqLite((string)dr["vremeunosa"])
+                    };
+                }
+                else
+                {
+                    return null;
+                }
             }
-            else
+            catch (Exception ex)
             {
+                MessageBox.Show(String.Format($"nMessage: {ex.Message}"));
                 return null;
             }
         }
@@ -908,6 +1234,187 @@ namespace zCarape.Services
 
         }
 
+
         #endregion
+
+        #region RadniNalozi
+
+        public long InsertOrUpdateRadniNalog(RadniNalog radniNalog)
+        {
+            bool noviZapis = radniNalog.ID == 0;
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+            cmd.Parameters.AddWithValue("@artikalid", radniNalog.ArtikalID);
+            cmd.Parameters.AddWithValue("@dezenartiklaid", radniNalog.DezenArtiklaID);
+            cmd.Parameters.AddWithValue("@velicinaid", radniNalog.VelicinaID);
+            cmd.Parameters.AddWithValue("@cilj", radniNalog.Cilj);
+            cmd.Parameters.AddWithValue("@opis", radniNalog.Opis);
+            cmd.Parameters.AddWithValue("@podsetnik", radniNalog.Podsetnik);
+            cmd.Parameters.AddWithValue("@hitno", radniNalog.Hitno);
+            cmd.Parameters.AddWithValue("@status", radniNalog.Status);
+
+            if (noviZapis)
+            {
+                cmd.CommandText = "INSERT INTO radninalozi "+
+                    "( artikalid, dezenartiklaid, velicinaid, cilj, opis, podsetnik, hitno, status) VALUES "+
+                    "(@artikalid,@dezenartiklaid,@velicinaid,@cilj,@opis,@podsetnik,@hitno,@status)";
+                long odgovor = 0;
+                try
+                {
+                    odgovor = cmd.ExecuteNonQuery();
+                }
+                catch (SQLiteException ex)
+                {
+                    MessageBox.Show(String.Format($"ErrorCode: {ex.ErrorCode}\nMessage: {ex.Message}"));
+                }
+                catch (Exception ex)
+                {
+
+                    MessageBox.Show(String.Format($"nMessage: {ex.Message}"));
+                }
+
+                if (odgovor == 1)
+                    return con.LastInsertRowId;
+            }
+            else
+            {
+                cmd.Parameters.AddWithValue("@id", radniNalog.ID);
+                cmd.CommandText = "UPDATE radninalozi SET artikalid=@artikalid,dezenartiklaid=@dezenartiklaid," +
+                    "velicinaid=@velicinaid,cilj=@cilj,opis=@opis,podsetnik=@podsetnik,hitno=@hitno,status=@status WHERE id=@id";
+                try
+                {
+                    cmd.ExecuteNonQuery();
+                }
+                catch (SQLiteException ex)
+                {
+                    MessageBox.Show(String.Format($"ErrorCode: {ex.ErrorCode}\nMessage: {ex.Message}"));
+                }
+                catch (Exception ex)
+                {
+
+                    MessageBox.Show(String.Format($"nMessage: {ex.Message}"));
+                }
+            }
+            return radniNalog.ID;
+        }
+
+        public RadniNalog GetRadniNalog(long radniNalogID)
+        {
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+            cmd.CommandText = "SELECT id,artikalid,dezenartiklaid,velicinaid,cilj,napravljeno,opis,podsetnik,hitno,status,vremeunosa FROM RadniNalozi WHERE ID=@id";
+            cmd.Parameters.AddWithValue("@id", radniNalogID);
+
+            try
+            {
+                using SQLiteDataReader dr = cmd.ExecuteReader(System.Data.CommandBehavior.SingleRow);
+
+                if (dr.HasRows)
+                {
+                    dr.Read();
+
+                    return new RadniNalog()
+                    {
+                        ID = (long)dr["id"],
+                        ArtikalID = (long)dr["artikalid"],
+                        DezenArtiklaID = (long)dr["dezenartiklaid"],
+                        VelicinaID = (long)dr["velicinaid"],
+                        Cilj = (long)dr["cilj"],
+                        Napravljeno = (long)dr["napravljeno"],
+                        Opis = (dr["opis"] == DBNull.Value) ? string.Empty : (string)dr["opis"],
+                        Podsetnik = (dr["podsetnik"] == DBNull.Value) ? string.Empty : (string)dr["podsetnik"],
+                        Hitno = (long)dr["hitno"] == 1,
+                        Status = (byte)(long)dr["status"],
+                        VremeUnosa = Helper.ConvertToDateTimeFromSqLite(dr["vremeunosa"].ToString())
+                    };
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                return null;
+            }
+        }
+
+        public bool DeleteRadniNalog(long radniNalogID)
+        {
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+            cmd.Parameters.AddWithValue("@id", radniNalogID);
+
+            bool izbrisan = false;
+            // Otvaram transakciju
+            cmd.CommandText = "begin";
+            cmd.ExecuteNonQuery();
+
+            try
+            {
+                cmd.CommandText = "DELETE FROM AngazovaneMasine WHERE RadniNalogID=@id";
+                cmd.ExecuteNonQuery();
+
+                cmd.CommandText = "DELETE FROM radninalozi WHERE id=@id";
+                izbrisan = cmd.ExecuteNonQuery() == 1;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(String.Format($"nMessage: {ex.Message}"), "Greska", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+            }
+
+            // Kraj transakcije
+            cmd.CommandText = "end";
+            cmd.ExecuteNonQuery();
+
+            return izbrisan;
+        }
+
+        #endregion
+
+        #region Lica
+
+        public IEnumerable<Lice> GetAllAktivnaLica()
+        {
+            List<Lice> lista = new List<Lice>();
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+            cmd.CommandText = "SELECT * FROM Lica WHERE Aktivan=1";
+
+            using SQLiteDataReader dr = cmd.ExecuteReader();
+
+            if (dr.HasRows)
+            {
+                while (dr.Read())
+                {
+
+
+                    lista.Add(new Lice()
+                    {
+                        ID = (long)dr["id"],
+                        Ime = (string)dr["ime"],
+                        Prezime = (string)dr["prezime"],
+                        RadnoMesto = (string)dr["radnomesto"],
+                        Aktivan = (long)dr["aktivan"]==1,
+                        VremeUnosa = Helper.ConvertToDateTimeFromSqLite((string)dr["vremeunosa"])
+                    }); ;
+
+                }
+            }
+
+            return lista;
+        }
+
+        #endregion
+
     }
 }

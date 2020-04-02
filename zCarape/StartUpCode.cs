@@ -30,7 +30,12 @@ namespace zCarape
                 MessageBox.Show(poruka, "Nije moguce uspostaviti konekciju sa bazom podataka", MessageBoxButton.OK, MessageBoxImage.Warning);
                 App.Current.Shutdown();
             }
-
+            
+            // TODO: Nadogradnja bazom: TREBA PROMENITI DA SE METOD POZIVA PREKO INTERFEJSA
+            if (!(new zCarape.Services.DBService()).NadogradiBazu(out poruka))
+            {
+                MessageBox.Show(poruka, "Nije moguce nadograditi bazu podataka", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
 
             // Provera da li postoji upisana putenja do baze foldera sa fotografija, ukoliko ne postoji trazim je u startnom direktorijumu
             if (string.IsNullOrWhiteSpace(GlobalniKod.SlikeDir))

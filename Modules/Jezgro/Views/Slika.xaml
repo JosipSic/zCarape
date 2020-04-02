@@ -16,10 +16,19 @@
         <RowDefinition Height="Auto"/>
         <RowDefinition Height="*"/>
       </Grid.RowDefinitions>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition/>
+        <ColumnDefinition/>
+      </Grid.ColumnDefinitions>
       
-       <Button Content="Zatvori" FontSize="20" Margin="10,10,10,10" Padding="5" VerticalAlignment="Top" Panel.ZIndex="2" Click="Button_Click"/>
+       <Button Grid.ColumnSpan="2" Content="Zatvori" FontSize="20" Margin="10,10,10,10" Padding="5" VerticalAlignment="Top" Panel.ZIndex="2" Click="Button_Click"/>
       
         <TextBlock Grid.Row="1" x:Name="OpisTextBlock" VerticalAlignment="Center" HorizontalAlignment="Center"  FontSize="20" Foreground="White">
+          <TextBlock.LayoutTransform>
+            <RotateTransform Angle="-90"/>
+          </TextBlock.LayoutTransform>
+        </TextBlock>
+        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="PathTextBlock" VerticalAlignment="Center" HorizontalAlignment="Center"  FontSize="20" Foreground="White">
           <TextBlock.LayoutTransform>
             <RotateTransform Angle="-90"/>
           </TextBlock.LayoutTransform>

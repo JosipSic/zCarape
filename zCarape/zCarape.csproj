@@ -21,6 +21,7 @@
     <None Remove="Images\SaveBlack.png" />
     <None Remove="Images\SaveBlueGray.png" />
     <None Remove="Images\Undo.png" />
+    <None Remove="Instalacija.txt" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Prism.DryIoc" Version="7.2.0.1422" />
