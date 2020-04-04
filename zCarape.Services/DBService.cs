@@ -2,15 +2,12 @@
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
-using System.Text;
+using System.Linq;
 using System.Windows;
 using zCarape.Core;
-using zCarape.Core.Models;
 using zCarape.Core.Business;
+using zCarape.Core.Models;
 using zCarape.Services.Interfaces;
-using System.Linq;
-using System.ComponentModel;
-using Prism.Ioc;
 
 namespace zCarape.Services
 {
@@ -267,8 +264,11 @@ namespace zCarape.Services
         #endregion //PrivatneMetode
 
         #region Masine
-        public IEnumerable<MasinaURadu> GetAllMasineURadu()
+        public IEnumerable<MasinaURadu> GetAllMasineURadu(DateTime _datum)
         {
+            // Povlacim iz baze sve predajnice na trazeni datum
+            IEnumerable<Predajnica> predajniceNaDan = GetAllPredajniceOnDate(_datum);
+
             List<MasinaURadu> masineURadu = new List<MasinaURadu>();
 
             #region Za testiranje
@@ -412,14 +412,48 @@ namespace zCarape.Services
                     }
 
                     // Zadaci
-                    masinaURadu.Zadaci.Add(new Zadatak()
+                    Zadatak zadatak = new Zadatak()
                     {
+                        MasinaID = masinaID,
                         StatusMasine = statusMasine,
                         Redosled = redosled,
-                        NalogURadu = nalogURadu
-                    } ); 
+                        NalogURadu = nalogURadu,
+                        DatumPredajnice = _datum,
+                    };
+
+                    Predajnica p;
+                    p = predajniceNaDan.FirstOrDefault(p => p.Smena == 1 && p.MasinaID == masinaID && p.RadniNalogID == nalogURadu.RadniNalogID);
+                    if (p!=null)
+                    {
+                        zadatak.PrvaSmenaPredajnicaID = p.ID;
+                        zadatak.PrvaSmenaRadnikID = p.LiceID;
+                        zadatak.PrvaSmena1kl = p.Kolicina;
+                        zadatak.PrvaSmena2kl = p.DrugaKl;
+                    }
+
+                    p = predajniceNaDan.FirstOrDefault(p => p.Smena == 2 && p.MasinaID == masinaID && p.RadniNalogID == nalogURadu.RadniNalogID);
+                    if (p != null)
+                    {
+                        zadatak.DrugaSmenaPredajnicaID = p.ID;
+                        zadatak.DrugaSmenaRadnikID = p.LiceID;
+                        zadatak.DrugaSmena1kl = p.Kolicina;
+                        zadatak.DrugaSmena2kl = p.DrugaKl;
+                    }
+
+                    p = predajniceNaDan.FirstOrDefault(p => p.Smena == 3 && p.MasinaID == masinaID && p.RadniNalogID == nalogURadu.RadniNalogID);
+                    if (p != null)
+                    {
+                        zadatak.TrecaSmenaPredajnicaID = p.ID;
+                        zadatak.TrecaSmenaRadnikID = p.LiceID;
+                        zadatak.TrecaSmena1kl = p.Kolicina;
+                        zadatak.TrecaSmena2kl = p.DrugaKl;
+                    }
+
+                    masinaURadu.Zadaci.Add(zadatak); 
+
                 }
             }
+
 
             return masineURadu;
         }
@@ -1415,6 +1449,111 @@ namespace zCarape.Services
         }
 
         #endregion
+
+        #region Predajnice
+
+        public long InsertOrUpdatePredajnica(Predajnica predajnica, string kolona = "")
+        {
+            bool noviZapis = predajnica.ID == 0;
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+            cmd.Parameters.AddWithValue("@radninalogid", predajnica.RadniNalogID);
+            cmd.Parameters.AddWithValue("@masinaid", predajnica.MasinaID);
+            cmd.Parameters.AddWithValue("@datum", predajnica.Datum);
+            cmd.Parameters.AddWithValue("@liceid", predajnica.LiceID);
+            cmd.Parameters.AddWithValue("@smena", predajnica.Smena);
+            cmd.Parameters.AddWithValue("@kolicina", predajnica.Kolicina);
+            cmd.Parameters.AddWithValue("@drugakl", predajnica.DrugaKl);
+
+            if (noviZapis)
+            {
+                cmd.CommandText = "INSERT INTO predajnice (radninalogid,masinaid,datum,liceid,smena,kolicina,drugakl)" +
+                    " VALUES (@radninalogid,@masinaid,@datum,@liceid,@smena,@kolicina,@drugakl)";
+                long odgovor = 0;
+                try
+                {
+                    odgovor = cmd.ExecuteNonQuery();
+                }
+                catch (SQLiteException ex)
+                {
+                  MessageBox.Show(String.Format($"ErrorCode: {ex.ErrorCode}\nMessage: {ex.Message}"));
+                }
+                catch (Exception ex)
+                {
+
+                    MessageBox.Show(String.Format($"nMessage: {ex.Message}"));
+                }
+
+                if (odgovor == 1)
+                    return con.LastInsertRowId;
+            }
+            else
+            {
+                cmd.Parameters.AddWithValue("@id", predajnica.ID);
+
+                string ctInsert;
+                if (string.IsNullOrEmpty(kolona))
+                    { ctInsert = "radninalogid=@radninalogid,masinaid=@masinaid,datum=@datum,liceid=@liceid,smena=@smena,kolicina=@kolicina,drugakl=@drugakl"; }
+                else
+                    { ctInsert = kolona + "=@" + kolona.ToLower(); }
+
+                cmd.CommandText = "UPDATE predajnice SET "+ctInsert+" WHERE id=@id";
+                try
+                {
+                    cmd.ExecuteNonQuery();
+                }
+                catch (SQLiteException ex)
+                {
+                    MessageBox.Show(String.Format($"ErrorCode: {ex.ErrorCode}\nMessage: {ex.Message}"));
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(String.Format($"nMessage: {ex.Message}"));
+                }
+
+            }
+            return predajnica.ID;
+        }
+
+        public IEnumerable<Predajnica> GetAllPredajniceOnDate(DateTime dateTime)
+        {
+            List<Predajnica> lista = new List<Predajnica>();
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+            cmd.CommandText = "SELECT * FROM Predajnice WHERE Datum=@datum";
+            cmd.Parameters.AddWithValue("@datum", dateTime.Date);
+
+            using SQLiteDataReader dr = cmd.ExecuteReader();
+
+            if (dr.HasRows)
+            {
+                while (dr.Read())
+                {
+
+
+                    lista.Add(new Predajnica()
+                    {
+                        ID = (long)dr["id"],
+                        RadniNalogID = (long)dr["radninalogid"],
+                        MasinaID = (long)dr["masinaid"],
+                        Datum = Helper.ConvertToDateTimeFromSqLite((string)dr["datum"]),
+                        LiceID = (long)dr["liceid"],
+                        Smena = (byte)(long)dr["smena"],
+                        Kolicina = (long)dr["kolicina"],
+                        DrugaKl = (long)dr["drugakl"],
+                        VremeUnosa = Helper.ConvertToDateTimeFromSqLite((string)dr["vremeunosa"])
+                    }); ;
+                }
+            }
+
+            return lista;
+        }
+
+        #endregion //Predajnica
 
     }
 }

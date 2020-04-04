@@ -1,9 +1,12 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace zCarape.Core.Business
 {
-    public class NalogURadu
+    public class NalogURadu: INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+
         public long RadniNalogID { get; set; }
         public long ArtikalID { get; set; }
         public string ArtikalSifra { get; set; }
@@ -17,6 +20,26 @@ namespace zCarape.Core.Business
         public long Cilj { get; set; }
         public bool Hitno { get; set; }
         public byte StatusNaloga { get; set; }
+
+        // Uradjeno
+        private long _uradjeno;
+        public long Uradjeno
+        {
+            get { return _uradjeno; }
+            set { _uradjeno = value; 
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Uradjeno")); 
+            }
+        }
+
+        // Fali
+        private long _fali;
+        public long Fali
+        {
+            get { return _fali; }
+            set { _fali = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Fali"));
+            }
+        }
 
     }
 }

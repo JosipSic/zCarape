@@ -23,7 +23,7 @@ namespace zCarape.Services.Interfaces
 
         bool DeleteMasina(long id);
 
-        IEnumerable<MasinaURadu> GetAllMasineURadu();
+        IEnumerable<MasinaURadu> GetAllMasineURadu(DateTime datum);
 
         IEnumerable<AngazovanaMasina> GetAngazovaneMasinePoRadnomNalogu(long radniNalogID);
 
@@ -82,6 +82,19 @@ namespace zCarape.Services.Interfaces
         bool DeleteRadniNalog(long radniNalogID);
 
         #endregion
+
+        #region Predajnice
+
+        /// <summary>
+        /// Kreira ili azurira predajnicu. Ako zapis nije novi i ako je prosledjen parametar "kolona" onda azurira samo tu kolonu.
+        /// </summary>
+        /// <param name="predajnica"></param>
+        /// <param name="kolona">Ako se ne unese onda ce sve kolone biti azuriranje</param>
+        /// <returns></returns>
+        long InsertOrUpdatePredajnica(Predajnica predajnica, string kolona = "");
+
+        IEnumerable<Predajnica> GetAllPredajniceOnDate(DateTime dateTime);
+        #endregion //Predajnica
 
         #region
 

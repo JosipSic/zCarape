@@ -9,6 +9,5 @@ namespace zCarape.Core.Business
         public long MasinaID { get; set; }
         public string MasinaNaziv { get; set; }
         public List<Zadatak> Zadaci {get;set;}
-
     }
 }
