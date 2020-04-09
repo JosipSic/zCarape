@@ -59,6 +59,7 @@
           <RowDefinition Height="Auto"/>
           <RowDefinition Height="Auto"/>
           <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
           <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -86,10 +87,19 @@
         </StackPanel>
 
         <TextBlock Grid.Row="4" Text="Dodatne instrukcije" Margin="4,4,0,0" Grid.ColumnSpan="2"/>
-        <TextBox Grid.Row="5" Grid.ColumnSpan="2" Text="{Binding Opis}" TextWrapping="WrapWithOverflow" Margin="4,0"  HorizontalAlignment="Stretch" MinHeight="65"/>
+        <TextBox Grid.Row="5" Grid.ColumnSpan="2" Text="{Binding Podsetnik}" TextWrapping="WrapWithOverflow" Margin="4,0"  HorizontalAlignment="Stretch" MinHeight="65"/>
 
-        <TextBlock Grid.Row="6" Text="Mašine na kojima se radi:" Margin="4,10,0,0" Grid.ColumnSpan="2" FontWeight="SemiBold" FontStyle="Italic"/>
-        <ScrollViewer Grid.Row="7" Grid.ColumnSpan="2" VerticalScrollBarVisibility="Auto">
+        <TextBlock Grid.Row="6" Text="Status naloga:" Margin="4"/>
+        <ComboBox Grid.Row="6" Grid.Column="1" ItemsSource="{Binding Statusi}" SelectedItem="{Binding SelectedStatus}" Margin="4" MinWidth="150" HorizontalAlignment="Left" >
+          <ComboBox.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding Naziv}" Margin="10,2" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+
+        <TextBlock Grid.Row="7" Text="Mašine na kojima se radi:" Margin="4,10,0,0" Grid.ColumnSpan="2" FontWeight="SemiBold" FontStyle="Italic"/>
+        <ScrollViewer Grid.Row="8" Grid.ColumnSpan="2" VerticalScrollBarVisibility="Auto">
           <ItemsControl  VerticalAlignment="Stretch" ItemsSource="{Binding Masine}" Margin="10,4,0,0">
             <ItemsControl.ItemTemplate>
               <DataTemplate>
@@ -147,7 +157,19 @@
     <DockPanel Grid.Row="5" LastChildFill="False" Background="AliceBlue">
       <Button DockPanel.Dock="Left"  Command="{Binding BackCommand}" Margin="4">
         <StackPanel Orientation="Horizontal">
-          <Image Source="pack://application:,,,/zCarape;component/Images/LeftGreen.png" Width="100" Margin="15,4,0,4"/>
+          <Image Width="100" Margin="15,4,0,4">
+            <Image.Style>
+              <Style TargetType="Image">
+                <Setter Property="Source" Value="pack://application:,,,/zCarape;component/Images/LeftGreen.png"/>
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding IsIzmena}" Value="True">
+                    <Setter Property="Source" Value="pack://application:,,,/zCarape;component/Images/Undo.png"/>
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </Image.Style>
+
+          </Image>
           <TextBlock Text="{Binding NazadText}" TextAlignment="Center" Margin="4" Padding="10,0,10,0" FontSize="22" VerticalAlignment="Center"/>
         </StackPanel>
       </Button>

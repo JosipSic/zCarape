@@ -15,16 +15,49 @@ namespace zCarape.Core.Business
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
 
+        public long ID { get; set; }
         public long MasinaID { get; set; }
         public byte StatusMasine { get; set; }
+        public bool Hitno { get; set; }
         public int Redosled { get; set; }
         public NalogURadu NalogURadu { get; set; }
-        public DateTime DatumPredajnice { get; set; }
+
+        public bool IsNotPrvi { get; set; }
+
+        private DateTime _datumPredajnice;
+        public DateTime DatumPredajnice
+        {
+            get => _datumPredajnice;
+            set
+            {
+                _datumPredajnice = value;
+                NotifyPropertyChanged();
+            }
+        }
 
         // Prva smena
         public long PrvaSmenaPredajnicaID { get; set; }
-        public long PrvaSmena1kl { get; set; }
-        public long PrvaSmena2kl { get; set; }
+
+        private long _prvaSmena1kl;
+        public long PrvaSmena1kl
+        {
+            get => _prvaSmena1kl;
+            set
+            {
+                _prvaSmena1kl = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        private long _prvaSmena2kl;
+        public long PrvaSmena2kl
+        {
+            get => _prvaSmena2kl; set
+            {
+                _prvaSmena2kl = value;
+                NotifyPropertyChanged();
+            }
+        }
 
         private long _prvaSmenaRadnikID;
         public long PrvaSmenaRadnikID
@@ -33,12 +66,12 @@ namespace zCarape.Core.Business
             set
             {
                 _prvaSmenaRadnikID = value;
+                NotifyPropertyChanged();
                 IsPrvaSmena = value > 0;
             }
         }
 
         private bool _isPrvaSmena;
-
         public bool IsPrvaSmena
         {
             get { return _isPrvaSmena; }
@@ -51,8 +84,26 @@ namespace zCarape.Core.Business
 
         // Druga smena
         public long DrugaSmenaPredajnicaID { get; set; }
-        public long DrugaSmena1kl { get; set; }
-        public long DrugaSmena2kl { get; set; }
+
+        private long _drugaSmena1kl;
+        public long DrugaSmena1kl
+        {
+            get => _drugaSmena1kl; set
+            {
+                _drugaSmena1kl = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        private long _drugaSmena2kl;
+        public long DrugaSmena2kl
+        {
+            get => _drugaSmena2kl; set
+            {
+                _drugaSmena2kl = value;
+                NotifyPropertyChanged();
+            }
+        }
 
         private long _drugaSmenaRadnikID;
         public long DrugaSmenaRadnikID
@@ -61,6 +112,7 @@ namespace zCarape.Core.Business
             set
             {
                 _drugaSmenaRadnikID = value;
+                NotifyPropertyChanged();
                 IsDrugaSmena = value > 0;
             }
         }
@@ -76,29 +128,50 @@ namespace zCarape.Core.Business
             }
         }
 
-
         // Treca smena
         public long TrecaSmenaPredajnicaID { get; set; }
-        public long TrecaSmena1kl { get; set; }
-        public long TrecaSmena2kl { get; set; }
+
+        private long _trecaSmena1kl;
+        public long TrecaSmena1kl
+        {
+            get => _trecaSmena1kl; set
+            {
+                _trecaSmena1kl = value;
+                NotifyPropertyChanged();
+            }
+        }
+        private long _trecaSmena2kl;
+        public long TrecaSmena2kl
+        {
+            get => _trecaSmena2kl; set
+            {
+                _trecaSmena2kl = value;
+                NotifyPropertyChanged();
+            }
+        }
 
         private long _trecaSmenaRadnikID;
         public long TrecaSmenaRadnikID
         {
             get => _trecaSmenaRadnikID;
-            set { _trecaSmenaRadnikID = value; }
-        }
-
-        private bool _isTrecaSmena;
-
-        public bool IsTrecaSmena
-        {
-            get { return _isTrecaSmena; }
-            set { _isTrecaSmena = value;
+            set
+            {
+                _trecaSmenaRadnikID = value;
                 NotifyPropertyChanged();
+                IsTrecaSmena = value > 0;
             }
         }
 
+        private bool _isTrecaSmena;
+        public bool IsTrecaSmena
+        {
+            get { return _isTrecaSmena; }
+            set
+            {
+                _isTrecaSmena = value;
+                NotifyPropertyChanged();
+            }
+        }
 
         /// <summary>
         /// Shallow Copy. NalogURadu points to the same instance.

@@ -25,7 +25,11 @@ namespace Proizvodnja.ViewModels
         public string Naziv
         {
             get { return _naziv; }
-            set { SetProperty(ref _naziv, value); }
+            set {
+                bool promenjen = _naziv != value;
+                SetProperty(ref _naziv, value);
+                if (promenjen) PromenjenJeNaziv();
+            }
         }
 
         private string _opis;
@@ -136,19 +140,23 @@ namespace Proizvodnja.ViewModels
 
         }
 
-        private bool PromenjenJeNaziv(string value)
+        private bool PromenjenJeNaziv()
         {
-            Masina masina = _dbService.GetByNazivMasina(value);
+            if (string.IsNullOrWhiteSpace(this.Naziv))
+            {
+                NoviUnosPriprema();
+                return true;
+            }
+
+            Masina masina = _dbService.GetByNazivMasina(this.Naziv);
             if (masina == null)
             {
                 // Ne postoji
-                NoviUnosPriprema();
             }
             else
             {
                 // Rezim izmene
                 this.id = masina.ID;
-                this.Naziv = masina.Naziv;
                 this.Opis = masina.Opis;
                 this.Slika = masina.Slika;
                 this.Aktivan = masina.Aktivan;

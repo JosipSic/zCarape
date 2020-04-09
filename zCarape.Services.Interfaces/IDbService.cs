@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using zCarape.Core.Models;
 using zCarape.Core.Business;
+using zCarape.Core;
 
 namespace zCarape.Services.Interfaces
 {
@@ -81,6 +82,13 @@ namespace zCarape.Services.Interfaces
 
         bool DeleteRadniNalog(long radniNalogID);
 
+        bool ZakljuciRadniNalog(long radniNalogID);
+
+        bool AktivirajRadniNalog(long radniNalogID);
+
+        Istorija GetNextIstorija(long masinaID, long trenutniRnID, Kretanje kretanje);
+
+        bool SetRedosledAngazovaneMasine(long angazovanaMasinaID, int redosled);
         #endregion
 
         #region Predajnice
@@ -94,6 +102,11 @@ namespace zCarape.Services.Interfaces
         long InsertOrUpdatePredajnica(Predajnica predajnica, string kolona = "");
 
         IEnumerable<Predajnica> GetAllPredajniceOnDate(DateTime dateTime);
+
+        IEnumerable<Predajnica> GetPredajniceByMasinaAndNalogOnDate(long masinaID, long radniNalogID, DateTime dateTime);
+
+        long GetPredatoByRadniNalog(long radniNalogID);
+
         #endregion //Predajnica
 
         #region

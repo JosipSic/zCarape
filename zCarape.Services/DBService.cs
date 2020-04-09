@@ -13,6 +13,37 @@ namespace zCarape.Services
 {
     public class DBService : IDbService
     {
+        /// <summary>
+        /// Komanda nad postojecim podacima (UPDATE ili DELETE)
+        /// </summary>
+        /// <param name="cmd"></param>
+        /// <param name="ocekivaniBrojZapisa">Ako je parametar prosledjen i ako je tangirani broj zapisa veci od 0 i razlicit od ocekivanog procedura javlja upozorenje</param>
+        /// <returns></returns>
+        private int IzvrsiCmdNonQuery(SQLiteCommand cmd, int ocekivaniBrojZapisa=0)
+        {
+            int brojZapisa = 0;
+            try
+            {
+                brojZapisa = cmd.ExecuteNonQuery();
+            }
+            catch (SQLiteException ex)
+            {
+                MessageBox.Show(String.Format($"ErrorCode: {ex.ErrorCode}\nMessage: {ex.Message}"));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(String.Format($"nMessage: {ex.Message}"));
+            }
+
+            // Ako je akcija izvrsena nad razlicitim brojem zapisa od ocekivanog javljam poruku
+            if (ocekivaniBrojZapisa > 0 && brojZapisa > 0 && ocekivaniBrojZapisa != brojZapisa )
+            {
+                MessageBox.Show($"Broj tangiranih zapisa u bazi {brojZapisa} se razlikuje od broja očekivanih zapisa {ocekivaniBrojZapisa}."
+                    , "Upozorenje", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+            }
+
+            return brojZapisa;
+        }
 
         #region Odrzavanje
         private bool checkIfColumnExists(string tableName, string columnName)
@@ -323,10 +354,10 @@ namespace zCarape.Services
             using var cmd = new SQLiteCommand(con);
             cmd.CommandText = "SELECT Masine.ID as MasinaID, Masine.Naziv as MasinaNaziv," +
                 "RadniNalozi.ID as RadniNalogID, RadniNalozi.ArtikalID, RadniNalozi.Cilj, RadniNalozi.HItno," +
-                "RadniNalozi.Status as StatusNaloga, Artikli.Sifra as ArtikalSifra," +
+                "RadniNalozi.Status as StatusNaloga, RadniNalozi.Podsetnik, Artikli.Sifra as ArtikalSifra," +
                 "Artikli.Naziv as ArtikalNaziv, Velicine.Oznaka as ArtikalVelicina, DezeniArtikla.Naziv as ArtikalDezen," +
                 "DezeniArtikla.Slika1, DezeniArtikla.Slika2, DezeniArtikla.Slika3, DezeniArtikla.Putanja as PutanjaFajla," +
-                "AngazovaneMasine.Redosled, AngazovaneMasine.Status as StatusMasine " +
+                "AngazovaneMasine.ID, AngazovaneMasine.Redosled, AngazovaneMasine.Status as StatusMasine " +
                 "FROM Masine " +
                 "INNER JOIN AngazovaneMasine ON  AngazovaneMasine.MasinaID = Masine.ID " +
                 "INNER JOIN RadniNalozi ON RadniNalozi.ID = AngazovaneMasine.RadniNalogID " +
@@ -334,12 +365,13 @@ namespace zCarape.Services
                 "INNER JOIN Velicine ON RadniNalozi.VelicinaID = Velicine.ID " +
                 "INNER JOIN DezeniArtikla ON RadniNalozi.DezenArtiklaID = DezeniArtikla.ID " +
                 "WHERE RadniNalozi.Status != 9 " +
-                "ORDER BY Masine.Naziv, RadniNalozi.Status, AngazovaneMasine.Redosled, RadniNalozi.ID";
+                "ORDER BY Masine.Naziv, RadniNalozi.Hitno DESC, RadniNalozi.Status, AngazovaneMasine.Redosled, RadniNalozi.ID";
 
             using SQLiteDataReader dr = cmd.ExecuteReader();
 
             if (dr.HasRows)
             {
+                long id;
                 long masinaID;
                 string masinaNaziv;
                 long radniNalogID;
@@ -357,9 +389,12 @@ namespace zCarape.Services
                 string putanjaFajla;
                 int redosled;
                 byte statusMasine;
+                string podsetnik;
+                bool isNotPrvi;
 
                 while (dr.Read())
                 {
+                    id = (long)dr["id"];
                     masinaID = (long)dr["masinaID"];
                     masinaNaziv = (dr["masinaNaziv"] == DBNull.Value) ? string.Empty : (string)dr["masinaNaziv"];
                     radniNalogID = (long)dr["radniNalogID"];
@@ -377,6 +412,7 @@ namespace zCarape.Services
                     putanjaFajla = (dr["putanjaFajla"] == DBNull.Value) ? string.Empty : (string)dr["putanjaFajla"];
                     redosled = (int)(long)dr["redosled"];
                     statusMasine = (byte)(long)dr["statusMasine"];
+                    podsetnik = (dr["podsetnik"] == DBNull.Value) ? string.Empty : (string)dr["podsetnik"];
 
                     // Masina
                     MasinaURadu masinaURadu = masineURadu.FirstOrDefault(m => m.MasinaID == masinaID);
@@ -384,6 +420,11 @@ namespace zCarape.Services
                     {
                         masinaURadu = new MasinaURadu() { MasinaID = masinaID, MasinaNaziv = masinaNaziv, Zadaci = new List<Zadatak>() };
                         masineURadu.Add(masinaURadu);
+                        isNotPrvi = false; // Zadatak koji se dodaje masini bice prvi
+                    }
+                    else
+                    {
+                        isNotPrvi = true;
                     }
 
                     // Radni nalog koji se dodaje jednoj ili na vise masina
@@ -407,18 +448,25 @@ namespace zCarape.Services
                             Slika1 = slika1,
                             Slika2 = slika2,
                             Slika3 = slika3,
-                            PutanjaFajla = putanjaFajla
+                            PutanjaFajla = putanjaFajla,
+                            Podsetnik = podsetnik
                         };
+
+                        nalogURadu.Uradjeno = GetPredatoByRadniNalog(nalogURadu.RadniNalogID);
+                        //nalogURadu.Fali = nalogURadu.Cilj - nalogURadu.Uradjeno; // Ovo se automatski racuna u samom modelu
                     }
 
                     // Zadaci
                     Zadatak zadatak = new Zadatak()
                     {
+                        ID = id,
                         MasinaID = masinaID,
                         StatusMasine = statusMasine,
+                        Hitno = hitno,
                         Redosled = redosled,
                         NalogURadu = nalogURadu,
                         DatumPredajnice = _datum,
+                        IsNotPrvi = isNotPrvi
                     };
 
                     Predajnica p;
@@ -514,7 +562,7 @@ namespace zCarape.Services
             cmd.Parameters.AddWithValue("@slika", masina.Slika);
             cmd.Parameters.AddWithValue("@aktivan", masina.Aktivan);
 
-            cmd.CommandText = "UPDATE masina SET naziv=@naziv, opis=@opis, slika=@slika, aktivan=@aktivan WHERE id=@id";
+            cmd.CommandText = "UPDATE masine SET naziv=@naziv, opis=@opis, slika=@slika, aktivan=@aktivan WHERE id=@id";
 
             cmd.ExecuteNonQuery();
 
@@ -1411,6 +1459,119 @@ namespace zCarape.Services
             return izbrisan;
         }
 
+        public bool ZakljuciRadniNalog(long radniNalogID)
+        {
+            return PostaviStatusRadnogNaloga(radniNalogID, StatusRadnogNaloga.Zatvoren);
+        }
+
+        public bool AktivirajRadniNalog(long radniNalogID)
+        {
+            return PostaviStatusRadnogNaloga(radniNalogID, StatusRadnogNaloga.Aktivan);
+        }
+
+        private bool PostaviStatusRadnogNaloga(long radniNalogID, byte status)
+        {
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+            cmd.Parameters.AddWithValue("@id", radniNalogID);
+            cmd.Parameters.AddWithValue("@status", status);
+            cmd.CommandText = "UPDATE RadniNalozi SET status=@status WHERE id=@id";
+
+            return IzvrsiCmdNonQuery(cmd, 1) > 0;
+        }
+
+        public Istorija GetNextIstorija(long masinaID, long trenutniRnID, Kretanje kretanje)
+        {
+            if (masinaID==0) { return null; }
+
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            bool isZadnji = false;
+            string strTrenutni = string.Empty;
+            string order = " DESC ";
+            using var cmd = new SQLiteCommand(con);
+            cmd.Parameters.AddWithValue("@masinaid", masinaID);
+            if (trenutniRnID!=0)
+            {
+                cmd.Parameters.AddWithValue("@trenutnirnid", trenutniRnID);
+                strTrenutni = " AND RadniNalozi.ID " + (kretanje == Kretanje.Nazad ? "<" : ">") + "@trenutnirnid ";
+                if (kretanje==Kretanje.Napred)
+                {
+                    order = " ASC ";
+                }
+            }
+            else
+            {
+                isZadnji = true;
+            }
+            cmd.CommandText = "SELECT Predajnice.Kolicina, Predajnice.Smena, Predajnice.DrugaKl, Predajnice.Datum, " +
+                           "RadniNalozi.ID as RadniNalogID, RadniNalozi.ArtikalID," +
+                           "Artikli.Naziv as ArtikalNaziv, Velicine.Oznaka as ArtikalVelicina, " +
+                           "DezeniArtikla.Naziv as ArtikalDezen, DezeniArtikla.Slika1, " +
+                           "Lica.Ime, Lica.Prezime " +
+                           "FROM Lica " +
+                           "INNER JOIN Predajnice ON Predajnice.LiceID = Lica.ID " +
+                           "INNER JOIN RadniNalozi ON RadniNalozi.ID = Predajnice.RadniNalogID " +
+                           "INNER JOIN Artikli ON RadniNalozi.ArtikalID = Artikli.ID " +
+                           "INNER JOIN Velicine ON RadniNalozi.VelicinaID = Velicine.ID " +
+                           "INNER JOIN DezeniArtikla ON RadniNalozi.DezenArtiklaID = DezeniArtikla.ID " +
+                           "WHERE Predajnice.MasinaID = @masinaid AND RadniNalozi.Status = 9 " +
+                           strTrenutni +
+                           "ORDER BY Predajnice.Datum"+order+", Predajnice.ID"+order+"LIMIT 1";
+
+            try
+            {
+                using SQLiteDataReader dr = cmd.ExecuteReader(System.Data.CommandBehavior.SingleRow);
+
+                if (dr.HasRows)
+                {
+                    dr.Read();
+
+                    string ime = (dr["ime"] == DBNull.Value) ? string.Empty : (string)dr["ime"];
+                    string prezime = (dr["prezime"] == DBNull.Value) ? string.Empty : (string)dr["prezime"];
+
+                    return new Istorija()
+                    {
+                        RadniNalogID = (long)dr["radninalogid"],
+                        ArtikalNaziv = (dr["artikalnaziv"] == DBNull.Value) ? string.Empty : (string)dr["artikalnaziv"],
+                        ArtikalVelicina = (dr["artikalvelicina"] == DBNull.Value) ? string.Empty : (string)dr["artikalvelicina"],
+                        ArtikalDezen = (dr["artikaldezen"] == DBNull.Value) ? string.Empty : (string)dr["artikaldezen"],
+                        Slika1 = (dr["slika1"] == DBNull.Value) ? string.Empty : (string)dr["slika1"],
+                        Kolicina = (long)dr["kolicina"],
+                        DrugaKl = (long)dr["drugakl"],
+                        Smena = (byte)(long)dr["smena"],
+                        Radnik = ime+" "+prezime,
+                        Datum = Helper.ConvertToDateTimeFromSqLite((string)dr["datum"]),
+                        IsZadnji = isZadnji
+                    };
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(String.Format($"nMessage: {ex.Message}"));
+                return null;
+            }
+        }
+
+        public bool SetRedosledAngazovaneMasine(long angazovanaMasinaID, int redosled)
+        {
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+            cmd.Parameters.AddWithValue("@amid", angazovanaMasinaID);
+            cmd.Parameters.AddWithValue("@redosled", redosled);
+            cmd.CommandText = "UPDATE AngazovaneMasine SET redosled=@redosled WHERE id=@amid";
+
+            return IzvrsiCmdNonQuery(cmd) > 0;
+        }
         #endregion
 
         #region Lica
@@ -1519,13 +1680,83 @@ namespace zCarape.Services
 
         public IEnumerable<Predajnica> GetAllPredajniceOnDate(DateTime dateTime)
         {
+            //List<Predajnica> lista = new List<Predajnica>();
+            //using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            //con.Open();
+
+            //using var cmd = new SQLiteCommand(con);
+            //cmd.CommandText = "SELECT * FROM Predajnice WHERE Datum=@datum";
+            //cmd.Parameters.AddWithValue("@datum", dateTime.Date);
+
+            //using SQLiteDataReader dr = cmd.ExecuteReader();
+
+            //if (dr.HasRows)
+            //{
+            //    while (dr.Read())
+            //    {
+
+
+            //        lista.Add(new Predajnica()
+            //        {
+            //            ID = (long)dr["id"],
+            //            RadniNalogID = (long)dr["radninalogid"],
+            //            MasinaID = (long)dr["masinaid"],
+            //            Datum = Helper.ConvertToDateTimeFromSqLite((string)dr["datum"]),
+            //            LiceID = (long)dr["liceid"],
+            //            Smena = (byte)(long)dr["smena"],
+            //            Kolicina = (long)dr["kolicina"],
+            //            DrugaKl = (long)dr["drugakl"],
+            //            VremeUnosa = Helper.ConvertToDateTimeFromSqLite((string)dr["vremeunosa"])
+            //        }); ;
+            //    }
+            //}
+
+            return GetPredajnice(dateTime: dateTime);
+        }
+
+        public IEnumerable<Predajnica> GetPredajniceByMasinaAndNalogOnDate(long masinaID, long radniNalogID, DateTime dateTime)
+        {
+            return GetPredajnice(masinaID, radniNalogID, dateTime);
+        }
+
+        private IEnumerable<Predajnica> GetPredajnice(long masinaID=0, long radniNalogID=0, DateTime? dateTime=null)
+        {
             List<Predajnica> lista = new List<Predajnica>();
+
             using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
             con.Open();
 
             using var cmd = new SQLiteCommand(con);
-            cmd.CommandText = "SELECT * FROM Predajnice WHERE Datum=@datum";
-            cmd.Parameters.AddWithValue("@datum", dateTime.Date);
+
+            string whereSql = string.Empty;
+            string temp = string.Empty;
+            if (radniNalogID != 0)
+            {
+                cmd.Parameters.AddWithValue("@radninalogid", radniNalogID);
+                if (!string.IsNullOrEmpty(whereSql)) { whereSql += " AND "; }
+                whereSql += "RadniNalogID=@radninalogid";
+            }
+
+            if (masinaID!=0) 
+            { 
+                cmd.Parameters.AddWithValue("@masinaid", masinaID);
+                if (!string.IsNullOrEmpty(whereSql)) { whereSql += " AND "; }
+                whereSql += "MasinaID=@masinaid";
+            }
+
+            if (dateTime!=null)
+            {
+                cmd.Parameters.AddWithValue("@datum", ((DateTime)dateTime).Date);
+                if (!string.IsNullOrEmpty(whereSql)) { whereSql += " AND "; }
+                whereSql += "Datum=@datum";
+            }
+
+            if (!string.IsNullOrEmpty(whereSql))
+            {
+                whereSql = " WHERE " + whereSql;
+            }
+
+            cmd.CommandText = "SELECT * FROM Predajnice" + whereSql;
 
             using SQLiteDataReader dr = cmd.ExecuteReader();
 
@@ -1533,7 +1764,6 @@ namespace zCarape.Services
             {
                 while (dr.Read())
                 {
-
 
                     lista.Add(new Predajnica()
                     {
@@ -1551,6 +1781,19 @@ namespace zCarape.Services
             }
 
             return lista;
+        }
+
+        public long GetPredatoByRadniNalog (long radniNalogID)
+        {
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+            cmd.CommandText = "SELECT SUM(kolicina) FROM Predajnice WHERE RadniNalogID=@radninalogid";
+            cmd.Parameters.AddWithValue("@radninalogid", radniNalogID);
+
+            object o = cmd.ExecuteScalar();
+            return o== System.DBNull.Value ? 0 : (long)o;
         }
 
         #endregion //Predajnica

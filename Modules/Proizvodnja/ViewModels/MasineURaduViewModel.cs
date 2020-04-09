@@ -11,11 +11,13 @@ using Prism.Regions;
 using zCarape.Core;
 using Prism.Events;
 using System.Windows;
+using System.Threading.Tasks;
 
 namespace Proizvodnja.ViewModels
 {
     public class MasineURaduViewModel : BindableBase, IRegionMemberLifetime
     {
+
         #region Fields
 
         private readonly IDbService _dbService;
@@ -61,13 +63,13 @@ namespace Proizvodnja.ViewModels
 
         void ExecuteSlikaCommand(object param)
         {
-            if (param!=null)
+            if (param != null)
             {
                 var values = (object[])param;
                 var slika = (string)values[0];
                 var nalog = (NalogURadu)values[1];
 
-                Jezgro.Views.Slika s = new Jezgro.Views.Slika(slika, nalog.ArtikalSifra + " "+ nalog.ArtikalNaziv, nalog.ArtikalDezen);
+                Jezgro.Views.Slika s = new Jezgro.Views.Slika(slika, nalog.ArtikalSifra + " " + nalog.ArtikalNaziv, nalog.ArtikalDezen);
                 s.Show();
             }
         }
@@ -79,13 +81,13 @@ namespace Proizvodnja.ViewModels
 
         void ExecuteEditNalogCommand(long? parameter)
         {
-            if (parameter==null || parameter==0)
+            if (parameter == null || parameter == 0)
             {
                 return;
             }
             NavigationParameters param = new NavigationParameters();
             param.Add("RadniNalogID", parameter);
-            _regionManager.RequestNavigate(RegionNames.ContentRegion, ViewNames.NoviRN3,param);
+            _regionManager.RequestNavigate(RegionNames.ContentRegion, ViewNames.NoviRN3, param);
         }
 
         // GotKeyboardFocusCommand
@@ -132,6 +134,130 @@ namespace Proizvodnja.ViewModels
                 UpdatePredajnica(parameter, changedProperty);
             }
         }
+
+        // ZakljuciNalogCommand
+        private DelegateCommand<long?> _zakljuciNalogCommand;
+        public DelegateCommand<long?> ZakljuciNalogCommand =>
+            _zakljuciNalogCommand ?? (_zakljuciNalogCommand = new DelegateCommand<long?>(ExecuteZakljuciNalog));
+
+        void ExecuteZakljuciNalog(long? radniNalogID)
+        {
+            if (radniNalogID == null || radniNalogID == 0)
+            {
+                return;
+            }
+            // Trazim kod kojih se sve masina javlja ovaj radniNalog
+            var masineSaNalogom =
+                from m in MasineURadu
+                from z in m.Zadaci
+                where z.NalogURadu.RadniNalogID == radniNalogID
+                select m.MasinaNaziv;
+
+            if (masineSaNalogom.Count()==0)
+            {
+                return;
+            }
+
+            string poruka = "Da li ste sigurni?" ;
+            if (masineSaNalogom.Count()>1)
+            {
+                string porukaPref = "Izabrani nalog je aktivan na mašinama ";
+                foreach (var item in masineSaNalogom)
+                {
+                    porukaPref += item + "; ";
+                }
+                porukaPref += "\nZaključenjem radni nalog se uklanja sa svih mašina.\n";
+                poruka = porukaPref + poruka;
+            }
+
+            if (MessageBox.Show(poruka,"Zaključenje radnog naloga br."+radniNalogID.ToString(),MessageBoxButton.YesNo,MessageBoxImage.Question,MessageBoxResult.No)
+                ==MessageBoxResult.No)
+            {
+                return;
+            }
+
+            _dbService.ZakljuciRadniNalog((long)radniNalogID);
+            OsveziFormu();
+        }
+
+        // AktivirajNalogCommand
+        private DelegateCommand<MasinaURadu> _aktivirajNalogCommand;
+        public DelegateCommand<MasinaURadu> AktivirajNalogCommand =>
+            _aktivirajNalogCommand ?? (_aktivirajNalogCommand = new DelegateCommand<MasinaURadu>(ExecuteAktivirajNalogCommand));
+
+        void ExecuteAktivirajNalogCommand(MasinaURadu radniNalogID)
+        {
+            _dbService.AktivirajRadniNalog(radniNalogID.Istorija.RadniNalogID);
+            OsveziFormu();
+        }
+
+        // DatumChangedCommand
+        private DelegateCommand<Zadatak> _datumChangedCommand;
+        public DelegateCommand<Zadatak> DatumChangedCommand =>
+            _datumChangedCommand ?? (_datumChangedCommand = new DelegateCommand<Zadatak>(ExecuteDatumChangedCommand));
+
+        void ExecuteDatumChangedCommand(Zadatak zadatak)
+        {
+            OsveziPredajnice(zadatak);
+        }
+
+        // PretnodniDanCommand
+        private DelegateCommand<Zadatak> _prethodniDanComman;
+        public DelegateCommand<Zadatak> PrethodniDanCommand=>
+            _prethodniDanComman ?? (_prethodniDanComman = new DelegateCommand<Zadatak>(ExecutePrethodniDanCommand));
+
+        void ExecutePrethodniDanCommand(Zadatak zadatak)
+        {
+            zadatak.DatumPredajnice = zadatak.DatumPredajnice.AddDays(-1);
+            ExecuteDatumChangedCommand(zadatak);
+        }
+
+        // NaredniDanCommand
+        private DelegateCommand<Zadatak> _naredniDanCommand;
+        public DelegateCommand<Zadatak> NaredniDanCommand =>
+            _naredniDanCommand ?? (_naredniDanCommand = new DelegateCommand<Zadatak>(ExecuteNaredniDanCommand));
+
+        void ExecuteNaredniDanCommand(Zadatak zadatak)
+        {
+            if (zadatak.DatumPredajnice==DateTime.Now.Date)
+            {
+                return;
+            }
+
+            zadatak.DatumPredajnice = zadatak.DatumPredajnice.AddDays(1);
+            ExecuteDatumChangedCommand(zadatak);
+        }
+
+        // PrethodniIstorijaCommand
+        private DelegateCommand<MasinaURadu> _prethodniIstorijaCommand;
+        public DelegateCommand<MasinaURadu> PrethodniIstorijaCommand =>
+            _prethodniIstorijaCommand ?? (_prethodniIstorijaCommand = new DelegateCommand<MasinaURadu>(ExecutePrethodniIstorijaCommand));
+
+        void ExecutePrethodniIstorijaCommand(MasinaURadu parameter)
+        {
+            FormirajIstoriju(parameter, Kretanje.Nazad);
+        }
+
+        // NaredniIstorijaCommand
+        private DelegateCommand<MasinaURadu> _naredniIstorijaCommand;
+        public DelegateCommand<MasinaURadu> NaredniIstorijaCommand =>
+            _naredniIstorijaCommand ?? (_naredniIstorijaCommand = new DelegateCommand<MasinaURadu>(ExecuteNaredniIstorijaCommand));
+
+        void ExecuteNaredniIstorijaCommand(MasinaURadu parameter)
+        {
+            FormirajIstoriju(parameter, Kretanje.Napred);
+        }
+
+        // MoveLeftCommand
+        private DelegateCommand<Zadatak> _moveLeftCommand;
+        public DelegateCommand<Zadatak> MoveLeftCommand =>
+            _moveLeftCommand ?? (_moveLeftCommand = new DelegateCommand<Zadatak>(ExecuteMoveLeftCommand));
+
+        void ExecuteMoveLeftCommand(Zadatak parameter)
+        {
+            MoveLeftZadatak(parameter);
+        }
+
         #endregion //Commands
 
         #region Ctor
@@ -142,6 +268,7 @@ namespace Proizvodnja.ViewModels
             _regionManager = regionManager;
             FormirajListuRadnika();
             FormirajSpisakMasinaURadu();
+            OsveziFormuUOdredjenoVreme();
         }
 
 
@@ -149,9 +276,97 @@ namespace Proizvodnja.ViewModels
 
         #region Methods
 
+        private void OsveziFormu()
+        {
+            FormirajSpisakMasinaURadu();
+        }
+
+        /// <summary>
+        /// Ponovo popunjava tabelu predatih kolicina po smenama za prosledjeni zadatak na dan u zadatku
+        /// </summary>
+        /// <param name="zadatak"></param>
+        private void OsveziPredajnice(Zadatak zadatak)
+        {
+            IEnumerable<Predajnica> predajniceNaDan =
+                _dbService.GetPredajniceByMasinaAndNalogOnDate(zadatak.MasinaID, zadatak.NalogURadu.RadniNalogID, zadatak.DatumPredajnice);
+
+            Predajnica p;
+            p = predajniceNaDan.FirstOrDefault(p => p.Smena == 1);
+            if (p != null)
+            {
+                zadatak.PrvaSmenaPredajnicaID = p.ID;
+                zadatak.PrvaSmenaRadnikID = p.LiceID;
+                zadatak.PrvaSmena1kl = p.Kolicina;
+                zadatak.PrvaSmena2kl = p.DrugaKl;
+            }
+            else
+            {
+                zadatak.PrvaSmenaPredajnicaID = 0;
+                zadatak.PrvaSmenaRadnikID = 0;
+                zadatak.PrvaSmena1kl = 0;
+                zadatak.PrvaSmena2kl = 0;
+            }
+
+            p = predajniceNaDan.FirstOrDefault(p => p.Smena == 2);
+            if (p != null)
+            {
+                zadatak.DrugaSmenaPredajnicaID = p.ID;
+                zadatak.DrugaSmenaRadnikID = p.LiceID;
+                zadatak.DrugaSmena1kl = p.Kolicina;
+                zadatak.DrugaSmena2kl = p.DrugaKl;
+            }
+            else
+            {
+                zadatak.DrugaSmenaPredajnicaID = 0;
+                zadatak.DrugaSmenaRadnikID = 0;
+                zadatak.DrugaSmena1kl = 0;
+                zadatak.DrugaSmena2kl = 0;
+            }
+
+            p = predajniceNaDan.FirstOrDefault(p => p.Smena == 3);
+            if (p != null)
+            {
+                zadatak.TrecaSmenaPredajnicaID = p.ID;
+                zadatak.TrecaSmenaRadnikID = p.LiceID;
+                zadatak.TrecaSmena1kl = p.Kolicina;
+                zadatak.TrecaSmena2kl = p.DrugaKl;
+            }
+            else
+            {
+                zadatak.TrecaSmenaPredajnicaID = 0;
+                zadatak.TrecaSmenaRadnikID = 0;
+                zadatak.TrecaSmena1kl = 0;
+                zadatak.TrecaSmena2kl = 0;
+            }
+
+        }
+
+        private void OsveziFormuUOdredjenoVreme()
+        {
+            var DailyTime = "14:12:01";
+            var timeParts = DailyTime.Split(new char[1] { ':' });
+
+            var dateNow = DateTime.Now;
+            var date = new DateTime(dateNow.Year, dateNow.Month, dateNow.Day,
+                       int.Parse(timeParts[0]), int.Parse(timeParts[1]), int.Parse(timeParts[2]));
+            TimeSpan ts;
+            if (date > dateNow)
+                ts = date - dateNow;
+            else
+            {
+                date = date.AddDays(1);
+                ts = date - dateNow;
+            }
+
+            //waits certan time and run the code
+            Task.Delay(ts).ContinueWith((x) => OsveziFormu());
+        }
+
+
         private void FormirajSpisakMasinaURadu()
         {
             MasineURadu = new ObservableCollection<MasinaURadu>(_dbService.GetAllMasineURadu(DateTime.Now.Date));
+            FormirajIstoriju();
         }
 
         private void FormirajListuRadnika()
@@ -274,8 +489,66 @@ namespace Proizvodnja.ViewModels
                         break;
                 }
 
+                if (changedProperty.EndsWith("1kl"))
+                {
+                    AzurirajPredatuKolicinu(zadatak.NalogURadu);
+                }
+
             }
         }
+
+        private void AzurirajPredatuKolicinu(NalogURadu nalogURadu)
+        {
+            nalogURadu.Uradjeno = _dbService.GetPredatoByRadniNalog(nalogURadu.RadniNalogID);
+        }
+
+        private void FormirajIstoriju(MasinaURadu masinaURadu=null, Kretanje kretanje=Kretanje.Nazad)
+        {
+            if (masinaURadu==null)
+            {
+                foreach (MasinaURadu item in MasineURadu)
+                {
+                    FormirajIstorijuIns(item, kretanje);
+                }
+            }
+            else
+            {
+                FormirajIstorijuIns(masinaURadu, kretanje);
+            }
+        }
+
+        private void FormirajIstorijuIns(MasinaURadu masinaURadu, Kretanje kretanje)
+        {
+            long trenutniRnID = masinaURadu.Istorija == null ? 0 : masinaURadu.Istorija.RadniNalogID;
+            var istorijaTemp = _dbService.GetNextIstorija(masinaURadu.MasinaID, trenutniRnID, kretanje);
+            if (istorijaTemp!=null)
+            {
+                masinaURadu.Istorija = istorijaTemp;
+            }
+            else if (kretanje==Kretanje.Napred && masinaURadu.Istorija!=null)
+            {
+                masinaURadu.Istorija.IsZadnji = true;
+            }
+        }
+
+        private void MoveLeftZadatak(Zadatak zadatak2)
+        {
+            if (zadatak2 == null) return;
+
+            // Zadatak koji je istog statusa i iste hitnosti a ima redosled koji je najveci, ali manji ili jednak od zadatak2.redosled
+            // ako je isti redosled onda gleda najveci RadniNalogID
+            Zadatak zadatak1 = (from m in MasineURadu
+                                where m.MasinaID == zadatak2.MasinaID
+                                from z in m.Zadaci
+                                where z.StatusMasine == zadatak2.StatusMasine && z.Hitno == zadatak2.Hitno
+                                orderby z.Redosled descending
+                                select z).FirstOrDefault();
+            if (zadatak1 == null) return;
+
+            _dbService.SetRedosledAngazovaneMasine(zadatak2.ID, zadatak2.Redosled - 1);
+            OsveziFormu();
+        }
+
 
         #endregion //Methods
 

@@ -58,4 +58,18 @@ namespace zCarape.Core
                 return value;
         }
     }
+
+    public class LongNegativToPositiveConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return Math.Abs((long)value);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+            //return Math.Abs((long)value);
+        }
+    }
 }

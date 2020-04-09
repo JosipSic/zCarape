@@ -16,6 +16,7 @@
     <None Remove="Images\Add.png" />
     <None Remove="Images\Delete.png" />
     <None Remove="Images\edit.png" />
+    <None Remove="Images\GoLeft.png" />
     <None Remove="Images\LeftGreen.png" />
     <None Remove="Images\save.png" />
     <None Remove="Images\SaveBlack.png" />
@@ -37,6 +38,7 @@
     <Resource Include="Images\Add.png" />
     <Resource Include="Images\Delete.png" />
     <Resource Include="Images\edit.png" />
+    <Resource Include="Images\GoLeft.png" />
     <Resource Include="Images\LeftGreen.png" />
     <Resource Include="Images\save.png" />
     <Resource Include="Images\SaveBlack.png" />

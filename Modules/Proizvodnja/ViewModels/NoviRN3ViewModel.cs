@@ -105,12 +105,12 @@ namespace Proizvodnja.ViewModels
             set { SetProperty(ref _hitno, value); }
         }
 
-        // Opis
-        private string _opis;
-        public string Opis
+        // Podsetnik
+        private string _podsetnik;
+        public string Podsetnik
         {
-            get { return _opis; }
-            set { SetProperty(ref _opis, value); }
+            get { return _podsetnik; }
+            set { SetProperty(ref _podsetnik, value); }
         }
 
         // NazadText
@@ -128,6 +128,29 @@ namespace Proizvodnja.ViewModels
         {
             get { return _masine; }
             set { SetProperty(ref _masine, value); }
+        }
+
+        // Statusi
+        private List<Status> _statusi;
+        public List<Status> Statusi
+        {
+            get { return _statusi; }
+            set { SetProperty(ref _statusi, value); }
+        }
+
+        // SelectedStatus
+        private Status _selectedStatus;
+        public Status SelectedStatus
+        {
+            get { return _selectedStatus; }
+            set { SetProperty(ref _selectedStatus, value); }
+        }
+
+        private bool _isIzmena = false;
+        public bool IsIzmena
+        {
+            get { return _isIzmena; }
+            set { SetProperty(ref _isIzmena, value); }
         }
 
         #endregion //Properties
@@ -151,7 +174,8 @@ namespace Proizvodnja.ViewModels
                 DezenArtiklaID = Dezen.ID,
                 VelicinaID = SelectedVelicina.ID,
                 Cilj = this.Cilj,
-                Opis = this.Opis,
+                Status = this.SelectedStatus.StatusRN,
+                Podsetnik = this.Podsetnik,
                 Hitno = this.Hitno
             });
             if (odgovor > 0)
@@ -235,7 +259,9 @@ namespace Proizvodnja.ViewModels
         {
             _dbService = dbService;
             _regionManager = regionManager;
+            FormirajListuStatusa();
         }
+
 
         #endregion //Ctor
 
@@ -260,10 +286,16 @@ namespace Proizvodnja.ViewModels
             FormirajSpisakMasina();
 
             SelectedVelicina = Velicine.FirstOrDefault(v => v.ID == rn.VelicinaID);
+            SelectedStatus = Statusi.FirstOrDefault(s => s.StatusRN == rn.Status);
+            if (SelectedStatus==null)
+            {
+                SelectedStatus = Statusi.FirstOrDefault(s => s.StatusRN == StatusRadnogNaloga.Aktivan);
+            }
             Cilj = rn.Cilj;
             Hitno = rn.Hitno;
-            Opis = rn.Opis;
+            Podsetnik = rn.Podsetnik;
             Datum = rn.VremeUnosa;
+
 
             return true;
         }
@@ -285,11 +317,18 @@ namespace Proizvodnja.ViewModels
             if (SelectedVelicina == null)
                 poruka += "Veličina je obavezan podatak.";
 
+            if (SelectedStatus == null)
+                poruka += "Status radnog naloga je obavezan podatak.";
+
             if (Cilj <= 0)
                 poruka += "\nCiljna kolicina za proizvodnju je obavezan podatak.";
 
             if (!Masine.Any(m => m.Izbor))
-                poruka += "\nMora biti izabrana barem jedna masina na kojoj se radi.";
+                poruka += "\nMora biti izabrana barem jedna masina na koj" +
+                    "oj se radi.";
+
+            if (SelectedStatus.StatusRN == StatusRadnogNaloga.Pauziran && Hitno)
+                poruka += "\nNalog ne moze biti istovremono i Hitan i Pauziran. Isključite opciju Hitan ili promenite status.";
 
             if (!string.IsNullOrEmpty(poruka))
             {
@@ -335,6 +374,15 @@ namespace Proizvodnja.ViewModels
             Velicine = new ObservableCollection<Velicina>(_dbService.GetVelicine(Artikal.ID));
         }
 
+        private void FormirajListuStatusa()
+        {
+            Statusi = new List<Status>(){
+                new Status() {Naziv = "Aktivan", StatusRN=StatusRadnogNaloga.Aktivan },
+                new Status() {Naziv = "Pauziran", StatusRN=StatusRadnogNaloga.Pauziran},
+                new Status() {Naziv = "Zaključen", StatusRN=StatusRadnogNaloga.Zatvoren} 
+            };
+        }
+
         #endregion //Methods
 
         #region INavigationAware
@@ -360,6 +408,7 @@ namespace Proizvodnja.ViewModels
                     MessageBox.Show($"Radni nalog {_radniNalogID} ne postoji","", MessageBoxButton.OK, MessageBoxImage.Information);
                     _regionManager.RequestNavigate(RegionNames.ContentRegion, ViewNames.MasineURadu);
                 }
+                IsIzmena = true;
             }
             else
             { 
@@ -377,6 +426,7 @@ namespace Proizvodnja.ViewModels
                 {
                     MessageBox.Show("Nisu prosledjeni ocekivani parametri");
                 }
+                SelectedStatus = Statusi.FirstOrDefault(s => s.StatusRN == StatusRadnogNaloga.Aktivan);
             }
 
         }
@@ -387,6 +437,12 @@ namespace Proizvodnja.ViewModels
         public bool KeepAlive => false;
 
         #endregion //IRegionMemberLifetime
+    }
+
+    public class Status
+    {
+        public string Naziv { get; set; }
+        public byte StatusRN { get; set; }
     }
 
     public class MasinaZaIzbor

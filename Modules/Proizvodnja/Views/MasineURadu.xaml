@@ -2,16 +2,19 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:prism="http://prismlibrary.com/"  
+             xmlns:system="clr-namespace:System;assembly=mscorlib"
              xmlns:core="clr-namespace:zCarape.Core;assembly=zCarape.Core" xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              prism:ViewModelLocator.AutoWireViewModel="True">
   <UserControl.Resources>
+    <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     <core:SlikaToPunaPutanjaKonverter x:Key="SlikaToPunaPutanjaKonverter"/>
     <core:MultiParametersConverter x:Key="MultiParametersConverter"/>
     <core:ZeroIfEmptyConverter x:Key="ZeroIfEmptyConverter"/>
-   
+    <core:LongNegativToPositiveConverter x:Key="LongNegativeToPositiveConverter"/>
+
     <DataTemplate x:Key="ListaRadnikaTemplate">
       <StackPanel Orientation="Horizontal">
-        <TextBlock Text="{Binding Prezime}"/>
+        <TextBlock Text="{Binding Prezime}" />
         <TextBlock Text="{Binding Ime}" Margin="5,0,0,0"/>
       </StackPanel>
     </DataTemplate>
@@ -20,86 +23,267 @@
       <Setter Property="HorizontalContentAlignment" Value="Right"/>
       <Setter Property="core:NumberOnlyBehaviour.IsEnabled" Value="True"/>
     </Style>
+
+    <ScaleTransform ScaleX="0.65" x:Key="Zbijeno"/>
+
+    <ControlTemplate x:Key="IstorijaTemplate">
+      <Grid Background="LightGray">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0" Background="LightSlateGray">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="25"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="25"/>
+          </Grid.ColumnDefinitions>
+          <Button Command="{Binding RelativeSource={RelativeSource  Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.PrethodniIstorijaCommand}" CommandParameter="{Binding}" Content="&lt;" Grid.Column="0" Background="Transparent" BorderBrush="{x:Null}"/>
+          <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBlock Text="N." />
+            <TextBlock Text="{Binding Istorija.RadniNalogID}" FontWeight="DemiBold"/>
+          </StackPanel>
+          <Button Command="{Binding RelativeSource={RelativeSource  Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.NaredniIstorijaCommand}" CommandParameter="{Binding}" Content="&gt;" Grid.Column="2" Background="Transparent" BorderBrush="{x:Null}"/>
+        </Grid>
+        <Grid Grid.Row="1" Margin="2,0,0,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="30"/>
+          </Grid.ColumnDefinitions>
+          <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+          </Grid.RowDefinitions>
+          <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="{Binding Istorija.ArtikalNaziv}" />
+          <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal">
+            <TextBlock Text="Vel. "/>
+            <TextBlock Text="{Binding Istorija.ArtikalVelicina}"/>
+          </StackPanel>
+          <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Text="{Binding Istorija.ArtikalDezen}"/>
+          <TextBlock Grid.Row="3" Grid.ColumnSpan="2" Text="Zadnja predajnica:" FontStyle="Oblique"/>
+          <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="5,0,0,0">
+            <TextBlock Text="{Binding Istorija.Smena}"/>
+            <TextBlock Text=".smena "/>
+            <TextBlock Text="{Binding Istorija.Datum, StringFormat=dd.MM.yyyy}"/>
+          </StackPanel>
+          <StackPanel Grid.Row="5" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="5,0,0,0">
+            <TextBlock Text="{Binding Istorija.Radnik}"/>
+          </StackPanel>
+          <StackPanel Grid.Row="6" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="5,0,0,0">
+            <TextBlock Text=" I klasa: "/>
+            <TextBlock Text="{Binding Istorija.Kolicina}" FontWeight="DemiBold"/>
+          </StackPanel>
+          <StackPanel Grid.Row="7" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="5,0,0,0">
+            <TextBlock Text="II klasa: "/>
+            <TextBlock Text="{Binding Istorija.DrugaKl}" FontWeight="DemiBold"/>
+          </StackPanel>
+
+          <Button Grid.Row="6" Grid.RowSpan="2" Grid.Column="1" Content="->" Height="30" Padding="0" BorderBrush="{x:Null}"  Command="{Binding RelativeSource={RelativeSource  Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.AktivirajNalogCommand}" CommandParameter="{Binding}"/>
+        </Grid>
+      </Grid>
+    </ControlTemplate>
+
+    <ControlTemplate x:Key="NemaIstorijeTemplate">
+      <Grid Background="LightSlateGray" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <TextBlock Text="Nema istorije" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="WhiteSmoke"/>
+      </Grid>
+    </ControlTemplate>
+
+    <ControlTemplate x:Key="HitnoLabel">
+      <Border BorderThickness="2" BorderBrush="Red" Background="Yellow" VerticalAlignment="Center" Padding="2,0" Margin="4,0,0,0">
+        <TextBlock Text="HITNO" FontWeight="SemiBold"/>
+      </Border>
+    </ControlTemplate>
+    
+    <ControlTemplate x:Key="PauzaLabel">
+      <Border BorderBrush="{x:Null}" VerticalAlignment="Center" Padding="2,0,2,2" Margin="2,0,0,0" Background="DarkBlue">
+        <TextBlock Text="Pauziran" FontWeight="DemiBold"  Foreground="White"/>
+      </Border>
+    </ControlTemplate>
+    
   </UserControl.Resources>
-  
-    <Grid>
+
+  <Grid>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
       <ItemsControl ItemsSource="{Binding Path=MasineURadu}" HorizontalContentAlignment="Stretch">
-      <ItemsControl.ItemTemplate>
+        <ItemsControl.ItemTemplate>
           <DataTemplate>
-            
-            <Border  BorderThickness="2" BorderBrush="DarkGreen" >
-              
-             <StackPanel Orientation="Horizontal">
-                <Border BorderBrush="{x:Null}"  Width="40" Background="AliceBlue">
+
+            <Border  BorderThickness="2" BorderBrush="DarkGreen" Margin="5">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="Auto"/>
+                  <ColumnDefinition Width="140"/>
+                  <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <!-- Naziv masine -->
+                <Border BorderBrush="DarkGreen"  Width="40" Background="AliceBlue" BorderThickness="0,0,2,0">
                   <Viewbox>
-                  <TextBlock Text="{Binding Path=MasinaNaziv}"   HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" >
-                    <TextBlock.LayoutTransform>
-                      <RotateTransform Angle="-90"/>
-                    </TextBlock.LayoutTransform>
-                  </TextBlock>
-                </Viewbox>
+                    <TextBlock Text="{Binding Path=MasinaNaziv}"   HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" >
+                      <TextBlock.LayoutTransform>
+                        <RotateTransform Angle="-90"/>
+                      </TextBlock.LayoutTransform>
+                    </TextBlock>
+                  </Viewbox>
                 </Border>
+                
+                <!-- Istorija -->
+                <ContentControl Grid.Column="1">
+                  <ContentControl.Style>
+                    <Style TargetType="ContentControl">
+                      <Setter Property="Template" Value="{StaticResource ResourceKey=IstorijaTemplate}"/>
+                      <Style.Triggers>
+                        <DataTrigger Binding="{Binding Istorija}" Value="{x:Null}">
+                          <Setter Property="Template" Value="{StaticResource NemaIstorijeTemplate}"/>
+                        </DataTrigger>
+                      </Style.Triggers>
+                    </Style>
+                  </ContentControl.Style>
+                </ContentControl>
 
-               <!-- Lista zadataka za jednu masinu -->
-                <StackPanel Orientation="Horizontal" >
-                <ListBox ItemsSource="{Binding Path=Zadaci}">
-                  <ListBox.ItemsPanel>
-                  <ItemsPanelTemplate>
-                    <StackPanel Orientation="Horizontal"/>
-                  </ItemsPanelTemplate>
-                  </ListBox.ItemsPanel>
-                <ListBox.ItemTemplate>
-                  <DataTemplate>
-                    <Grid Width="Auto">
-                      <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" MinWidth="50"/>
-                        <ColumnDefinition/>
-                        <ColumnDefinition/>
-                        <ColumnDefinition/>
-                        <ColumnDefinition/>
-                        <ColumnDefinition/>
-                      </Grid.ColumnDefinitions>
-                      <Grid.RowDefinitions>
-                        <RowDefinition/>
-                        <RowDefinition/>
-                        <RowDefinition/>
-                        <RowDefinition/>
-                        <RowDefinition/>
-                        <RowDefinition/>
-                        <RowDefinition/>
-                        <RowDefinition/>
-                        <RowDefinition/>
-                        <RowDefinition/>
-                      </Grid.RowDefinitions>
-                                            
-                      <TextBlock Grid.Row="2" Grid.Column="0" Text="Nalog"/>
-                      <TextBlock Grid.Row="3" Grid.Column="0" Text="Artikal"/>
-                      <TextBlock Grid.Row="4" Grid.Column="0" Text="Veličina"/>
-                      <TextBlock Grid.Row="5" Grid.Column="0" Text="Dezen"/>
-                      <TextBlock Grid.Row="6" Grid.Column="0" Text="Cilj"/>
-                      <TextBlock Grid.Row="7" Grid.Column="0" Text="Uradjeno"/>
-                      <TextBlock Grid.Row="8" Grid.Column="0" Text="Fali"/>
+                <!-- Lista zadataka za jednu masinu -->
+                <ScrollViewer Grid.Column="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Hidden" >
+                  <ListBox ItemsSource="{Binding Path=Zadaci}" BorderBrush="{x:Null}" BorderThickness="0">
+                    <ListBox.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <VirtualizingStackPanel IsItemsHost="True" Orientation="Horizontal"/>
+                      </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
 
-                      <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal">
-                        <TextBlock  FontWeight="Bold" Text="{Binding Path=NalogURadu.RadniNalogID}"/>
+                    <ListBox.ItemContainerStyle>
+                      <Style TargetType="{x:Type ListBoxItem}">
+                        <Setter Property="Template">
+                          <Setter.Value>
+                            <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                              <ContentPresenter/>
+                            </ControlTemplate>
+                          </Setter.Value>
+                        </Setter>
+                      </Style>
+                    </ListBox.ItemContainerStyle>
+
+                    <ListBox.ItemTemplate>
+                      <DataTemplate>
+                        <Grid Width="Auto">
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="Auto" MinWidth="50"/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                          </Grid.ColumnDefinitions>
+                          <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition Height="Auto"/>
+                          </Grid.RowDefinitions>
+
+                          <Rectangle Grid.Column="0" Grid.RowSpan="11" Fill="DarkGreen" Margin="0,0,5,0"/>
+
+                          <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal">
+                            <Button Command="{Binding RelativeSource={RelativeSource  Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.MoveLeftCommand}" CommandParameter="{Binding}"  Grid.Column="0" Background="Transparent" BorderBrush="{x:Null}" Visibility="{Binding IsNotPrvi, Converter={StaticResource BooleanToVisibilityConverter }}">
+                              <Image Source="pack://application:,,,/zCarape;component/Images/GoLeft.png" />
+                            </Button>
+                            <TextBlock  Text="Nalog" VerticalAlignment="Center"/>
+                          </StackPanel>
+                          <TextBlock Grid.Row="3" Grid.Column="1" Text="Artikal"/>
+                          <TextBlock Grid.Row="4" Grid.Column="1" Text="Veličina"/>
+                          <TextBlock Grid.Row="5" Grid.Column="1" Text="Dezen"/>
+                          <TextBlock Grid.Row="6" Grid.Column="1" Text="Cilj"/>
+                          <TextBlock Grid.Row="7" Grid.Column="1" Text="Uradjeno"/>
+                          <TextBlock Grid.Row="8" Grid.Column="1" Text="Fali"/>
+
+                          <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal">
+                            <TextBlock  FontWeight="Bold" Text="{Binding Path=NalogURadu.RadniNalogID}" VerticalAlignment="Center"/>
                             <Button Command="{Binding DataContext.EditNalogCommand, RelativeSource ={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding NalogURadu.RadniNalogID}"  Height="25" Background="Transparent" BorderBrush="Transparent">
-                          <Image Source="pack://application:,,,/zCarape;component/Images/edit.png" />
-                        </Button>
-                       </StackPanel>
-                      <TextBlock Grid.Row="3" Grid.Column="1" FontWeight="SemiBold" Text="{Binding Path=NalogURadu.ArtikalNaziv}"/>
-                      <TextBlock Grid.Row="4" Grid.Column="1" FontWeight="SemiBold" Text="{Binding Path=NalogURadu.ArtikalVelicina}"/>
-                      <TextBlock Grid.Row="5" Grid.Column="1" FontWeight="SemiBold" Text="{Binding Path=NalogURadu.ArtikalDezen}"/>
-                      <TextBlock Grid.Row="6" Grid.Column="1" FontWeight="SemiBold" Text="{Binding 
-                        Path=NalogURadu.Cilj}"/>
-                      <TextBlock Grid.Row="7" Grid.Column="1" FontWeight="SemiBold" Text="{Binding 
-                        Path=NalogURadu.Uradjeno}"/>
-                      <TextBlock Grid.Row="8" Grid.Column="1" FontWeight="SemiBold" Text="{Binding 
-                        Path=NalogURadu.Fali}"/>
-                      <TextBlock Grid.Row="9" Grid.ColumnSpan="4" Text="{Binding Path=NalogURadu.PutanjaFajla}" TextAlignment="Center"/>
+                              <Image Source="pack://application:,,,/zCarape;component/Images/edit.png" />
+                            </Button>
 
-                      <Image Grid.Row="1" Grid.RowSpan="8" Grid.Column="3" Stretch="Uniform" Source="{Binding Path=NalogURadu.Slika1,Converter={StaticResource SlikaToPunaPutanjaKonverter}}" MaxHeight="150">
-                        <Image.InputBindings>
+                            <ContentControl>
+                              <ContentControl.Style>
+                                <Style TargetType="ContentControl">
+                                  <Style.Triggers>
+                                    <DataTrigger Binding="{Binding NalogURadu.StatusNaloga}" Value="{x:Static core:StatusRadnogNaloga.Pauziran}">
+                                      <Setter Property="Template" Value="{StaticResource PauzaLabel}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Hitno}" Value="True">
+                                      <Setter Property="Template" Value="{StaticResource HitnoLabel}"/>
+                                    </DataTrigger>
+                                  </Style.Triggers>
+                                </Style>
+                              </ContentControl.Style>
+                            </ContentControl>
+                          </StackPanel>
+                          <TextBlock Grid.Row="3" Grid.Column="2" FontWeight="SemiBold" Text="{Binding Path=NalogURadu.ArtikalNaziv}" Margin="0,0,4,0"/>
+                          <TextBlock Grid.Row="4" Grid.Column="2" FontWeight="SemiBold" Text="{Binding Path=NalogURadu.ArtikalVelicina}"/>
+                          <TextBlock Grid.Row="5" Grid.Column="2" FontWeight="SemiBold" Text="{Binding Path=NalogURadu.ArtikalDezen}"/>
+                          <TextBlock Grid.Row="6" Grid.Column="2" FontWeight="SemiBold" Text="{Binding 
+                      Path=NalogURadu.Cilj}" TextAlignment="Right" Width="65" HorizontalAlignment="Left" />
+                          <TextBlock Grid.Row="7" Grid.Column="2" FontWeight="SemiBold" Text="{Binding 
+                      Path=NalogURadu.Uradjeno}" TextAlignment="Right" Width="65" HorizontalAlignment="Left"/>
+                          <TextBlock Grid.Row="8" Grid.Column="2" FontWeight="SemiBold" Text="{Binding 
+                      Path=NalogURadu.Fali}" TextAlignment="Right" Width="65" HorizontalAlignment="Left"/>
+
+                          <StackPanel Orientation="Horizontal" Grid.Row="8" Grid.Column="1" Grid.ColumnSpan="2" Background="White" Visibility="{Binding NalogURadu.IsOstvarenCilj, Converter={StaticResource BooleanToVisibilityConverter}}" HorizontalAlignment="Stretch">
+                            <TextBlock Text="Cilj je ostvaren " FontWeight="DemiBold" Background="LightGreen"/>
+                            <StackPanel Orientation="Horizontal" Background="LightGreen">
+                              <StackPanel.Resources>
+                                <Style TargetType="StackPanel">
+                                  <Style.Triggers>
+                                    <DataTrigger Binding="{Binding NalogURadu.Fali}" Value="0">
+                                      <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                  </Style.Triggers>
+                                </Style>
+                              </StackPanel.Resources>
+                              <TextBlock Text="+"/>
+                              <TextBlock Text="{Binding NalogURadu.Fali, Converter={StaticResource LongNegativeToPositiveConverter}, Mode=OneWay}" FontWeight="SemiBold" Padding="0,0,4,0"/>
+                            </StackPanel>
+                            <Button Content="Zaključi" Command="{Binding DataContext.ZakljuciNalogCommand, RelativeSource ={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding NalogURadu.RadniNalogID}" Margin="5,0,0,0"/>
+                          </StackPanel>
+
+                          <TextBlock Grid.Row="9" Grid.Column="3" Grid.ColumnSpan="4" Text="{Binding Path=NalogURadu.PutanjaFajla}" TextAlignment="Left">
+                            <TextBlock.Style>
+                              <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                  <Trigger Property="Text" Value="">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                  </Trigger>
+                                </Style.Triggers>
+                              </Style>
+                            </TextBlock.Style>  
+                          </TextBlock>
+                          
+                          <TextBlock Grid.Row="10" Grid.Column="1" Grid.ColumnSpan="6" Text="{Binding Path=NalogURadu.Podsetnik}" FontWeight="SemiBold" TextWrapping="Wrap" Foreground="DarkMagenta" FontSize="16">
+                            <TextBlock.Style>
+                              <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                  <Trigger Property="Text" Value="">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                  </Trigger>
+                                </Style.Triggers>
+                              </Style>
+                            </TextBlock.Style>
+                          </TextBlock>
+
+                          <Image Grid.Row="1" Grid.RowSpan="8" Grid.Column="4" Stretch="Uniform" Source="{Binding Path=NalogURadu.Slika1,Converter={StaticResource SlikaToPunaPutanjaKonverter}}" MaxHeight="150">
+                            <Image.InputBindings>
                               <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType=UserControl}, Path=DataContext.SlikaCommand}" >
                                 <MouseBinding.CommandParameter>
                                   <MultiBinding Converter="{StaticResource MultiParametersConverter}">
@@ -108,11 +292,11 @@
                                   </MultiBinding>
                                 </MouseBinding.CommandParameter>
                               </MouseBinding>
-                        </Image.InputBindings>
-                      </Image>
-                      
-                      <Image Grid.Row="1" Grid.RowSpan="8" Grid.Column="4" Stretch="Uniform" Source="{Binding Path=NalogURadu.Slika2,Converter={StaticResource SlikaToPunaPutanjaKonverter}}" MaxHeight="150">
-                        <Image.InputBindings>
+                            </Image.InputBindings>
+                          </Image>
+
+                          <Image Grid.Row="1" Grid.RowSpan="8" Grid.Column="5" Stretch="Uniform" Source="{Binding Path=NalogURadu.Slika2,Converter={StaticResource SlikaToPunaPutanjaKonverter}}" MaxHeight="150">
+                            <Image.InputBindings>
                               <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType=UserControl}, Path=DataContext.SlikaCommand}"  >
                                 <MouseBinding.CommandParameter>
                                   <MultiBinding Converter="{StaticResource MultiParametersConverter}">
@@ -121,11 +305,11 @@
                                   </MultiBinding>
                                 </MouseBinding.CommandParameter>
                               </MouseBinding>
-                        </Image.InputBindings>
-                      </Image>
+                            </Image.InputBindings>
+                          </Image>
 
-                      <Image Grid.Row="1" Grid.RowSpan="8" Grid.Column="5" Stretch="Uniform" Source="{Binding Path=NalogURadu.Slika3,Converter={StaticResource SlikaToPunaPutanjaKonverter}}" MaxHeight="150">
-                        <Image.InputBindings>
+                          <Image Grid.Row="1" Grid.RowSpan="8" Grid.Column="6" Stretch="Uniform" Source="{Binding Path=NalogURadu.Slika3,Converter={StaticResource SlikaToPunaPutanjaKonverter}}" MaxHeight="150">
+                            <Image.InputBindings>
                               <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType=UserControl}, Path=DataContext.SlikaCommand}" >
                                 <MouseBinding.CommandParameter>
                                   <MultiBinding Converter="{StaticResource MultiParametersConverter}">
@@ -134,149 +318,173 @@
                                   </MultiBinding>
                                 </MouseBinding.CommandParameter>
                               </MouseBinding>
-                        </Image.InputBindings>
-                      </Image>
+                            </Image.InputBindings>
+                          </Image>
 
-                      <!-- Predato -->
-                      <Border Grid.Row="1" Grid.RowSpan="8" Grid.Column="2" BorderBrush="Black" BorderThickness="1" VerticalAlignment="Top" Margin="0,10,0,0">
-                      <Grid>
-                            <Grid.ColumnDefinitions>
-                              <ColumnDefinition/>
-                              <ColumnDefinition/>
-                              <ColumnDefinition/>
-                              <ColumnDefinition/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                              <RowDefinition Height="Auto"/>
-                              <RowDefinition Height="Auto"/>
-                              <RowDefinition Height="Auto"/>
-                              <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <TextBlock Grid.Column="0" Text="Smena" Margin="5,0"/>
-                            <TextBlock Grid.Column="1" Text="Radnik" Margin="5,0"/>
-                            <TextBlock Grid.Column="2" Text="1.klasa" Margin="5,0"/>
-                            <TextBlock Grid.Column="3" Text="2.klasa" Margin="5,0"/>
+                          <!-- Predato -->
+                          
+                          <StackPanel Grid.Row="2" Grid.Column="3" Orientation="Horizontal" >
+                            <TextBlock Text="Predato: " VerticalAlignment="Center"/>
+                            <DatePicker SelectedDate="{Binding DatumPredajnice}" BorderBrush="{x:Null}" VerticalAlignment="Center" Width="110" FontWeight="Bold">
+                              <i:Interaction.Triggers>
+                                <i:EventTrigger EventName="SelectedDateChanged">
+                                  <prism:InvokeCommandAction Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.DatumChangedCommand}" CommandParameter="{Binding}"/>
+                                </i:EventTrigger>
+                              </i:Interaction.Triggers>
+                            </DatePicker>
+                            <Button Content="&lt;" Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.PrethodniDanCommand}" CommandParameter="{Binding}" VerticalAlignment="Top" Padding="2,0" BorderBrush="{x:Null}" Background="Transparent"/>
+                            <Button Content="&gt;" Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.NaredniDanCommand}" CommandParameter="{Binding}" VerticalAlignment="Top" Padding="2,0" BorderBrush="{x:Null}" Background="Transparent"/>
+                          </StackPanel>
+                          <Border Grid.Row="3" Grid.RowSpan="8" Grid.Column="3" BorderBrush="Black" BorderThickness="1" VerticalAlignment="Top" >
+                            <Border.Style>
+                              <Style TargetType="Border">
+                                <Setter Property="Background" Value="Orange"/>
+                                <Style.Triggers>
+                                  <DataTrigger Binding="{Binding DatumPredajnice}" Value="{x:Static system:DateTime.Today }">
+                                    <Setter Property="Background" Value="{x:Null}"/>
+                                    <!--<Setter  Property="IsEnabled" Value="False"/>-->
+                                  </DataTrigger>
+                                </Style.Triggers>
+                              </Style>
+                            </Border.Style>
+                            <Grid>
+                              <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                              </Grid.ColumnDefinitions>
+                              <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                              </Grid.RowDefinitions>
+                              <TextBlock Grid.Column="0" Text="Smena" Margin="2,0" LayoutTransform="{StaticResource Zbijeno}"/>
+                              <TextBlock Grid.Column="1" Text="Radnik" Margin="5,0"/>
+                              <TextBlock Grid.Column="2" Text="1.klasa" Margin="5,0"/>
+                              <TextBlock Grid.Column="3" Text="2.klasa" Margin="5,0"/>
 
-                            <TextBlock Grid.Row="1" Text="I" HorizontalAlignment="Center" FontWeight="SemiBold"/>
-                            <TextBlock Grid.Row="2" Text="II" HorizontalAlignment="Center" FontWeight="SemiBold"/>
-                            <TextBlock Grid.Row="3" Text="III" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                              <TextBlock Grid.Row="1" Text="I" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                              <TextBlock Grid.Row="2" Text="II" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                              <TextBlock Grid.Row="3" Text="III" HorizontalAlignment="Center" FontWeight="SemiBold"/>
 
-                              <TextBox Grid.Column="2" Grid.Row="1" Text="{Binding PrvaSmena1kl, Converter={StaticResource ZeroIfEmptyConverter}, StringFormat=#}" Style="{StaticResource InputTextBox}" IsEnabled="{Binding IsPrvaSmena}">
+                              <TextBox Grid.Column="2" Grid.Row="1" Text="{Binding PrvaSmena1kl, Converter={StaticResource ZeroIfEmptyConverter}, StringFormat=#}" Style="{StaticResource InputTextBox}" IsEnabled="{Binding IsPrvaSmena}" KeyUp="TextBox_KeyUp">
                                 <i:Interaction.Triggers>
                                   <i:EventTrigger EventName="GotFocus">
                                     <i:InvokeCommandAction Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,
-                                      AncestorType=UserControl}, Path=DataContext.GotFocusCommand}"
-                                      CommandParameter="{Binding}"/>
+                                    AncestorType=UserControl}, Path=DataContext.GotFocusCommand}"
+                                    CommandParameter="{Binding}"/>
                                   </i:EventTrigger>
                                   <i:EventTrigger EventName="LostFocus">
                                     <i:InvokeCommandAction Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,
-                                      AncestorType=UserControl}, Path=DataContext.LostFocusCommand}"
-                                      CommandParameter="{Binding}"/>
+                                    AncestorType=UserControl}, Path=DataContext.LostFocusCommand}"
+                                    CommandParameter="{Binding}"/>
                                   </i:EventTrigger>
                                 </i:Interaction.Triggers>
                               </TextBox>
 
-                              <TextBox Grid.Column="2" Grid.Row="2" Text="{Binding DrugaSmena1kl, Converter={StaticResource ZeroIfEmptyConverter}, StringFormat=#}" Style="{StaticResource InputTextBox}" IsEnabled="{Binding IsDrugaSmena}">
+                              <TextBox Grid.Column="2" Grid.Row="2" Text="{Binding DrugaSmena1kl, Converter={StaticResource ZeroIfEmptyConverter}, StringFormat=#}" Style="{StaticResource InputTextBox}" IsEnabled="{Binding IsDrugaSmena}" KeyUp="TextBox_KeyUp">
                                 <i:Interaction.Triggers>
                                   <i:EventTrigger EventName="GotFocus">
                                     <i:InvokeCommandAction Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,
-                                      AncestorType=UserControl}, Path=DataContext.GotFocusCommand}"
-                                      CommandParameter="{Binding}"/>
+                                    AncestorType=UserControl}, Path=DataContext.GotFocusCommand}"
+                                    CommandParameter="{Binding}"/>
                                   </i:EventTrigger>
                                   <i:EventTrigger EventName="LostFocus">
                                     <i:InvokeCommandAction Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,
-                                      AncestorType=UserControl}, Path=DataContext.LostFocusCommand}"
-                                      CommandParameter="{Binding}"/>
+                                    AncestorType=UserControl}, Path=DataContext.LostFocusCommand}"
+                                    CommandParameter="{Binding}"/>
                                   </i:EventTrigger>
                                 </i:Interaction.Triggers>
                               </TextBox>
 
-                              <TextBox Grid.Column="2" Grid.Row="3" Text="{Binding TrecaSmena1kl, Converter={StaticResource ZeroIfEmptyConverter}, StringFormat=#}" Style="{StaticResource InputTextBox}" IsEnabled="{Binding IsTrecaSmena}">
+                              <TextBox Grid.Column="2" Grid.Row="3" Text="{Binding TrecaSmena1kl, Converter={StaticResource ZeroIfEmptyConverter}, StringFormat=#}" Style="{StaticResource InputTextBox}" IsEnabled="{Binding IsTrecaSmena}" KeyUp="TextBox_KeyUp">
                                 <i:Interaction.Triggers>
                                   <i:EventTrigger EventName="GotFocus">
                                     <i:InvokeCommandAction Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,
-                                      AncestorType=UserControl}, Path=DataContext.GotFocusCommand}"
-                                      CommandParameter="{Binding}"/>
+                                    AncestorType=UserControl}, Path=DataContext.GotFocusCommand}"
+                                    CommandParameter="{Binding}"/>
                                   </i:EventTrigger>
                                   <i:EventTrigger EventName="LostFocus">
                                     <i:InvokeCommandAction Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,
-                                      AncestorType=UserControl}, Path=DataContext.LostFocusCommand}"
-                                      CommandParameter="{Binding}"/>
+                                    AncestorType=UserControl}, Path=DataContext.LostFocusCommand}"
+                                    CommandParameter="{Binding}"/>
                                   </i:EventTrigger>
                                 </i:Interaction.Triggers>
                               </TextBox>
 
-                              <TextBox Grid.Column="3" Grid.Row="1" Text="{Binding PrvaSmena2kl, Converter={StaticResource ZeroIfEmptyConverter}, StringFormat=#}" Style="{StaticResource InputTextBox}" IsEnabled="{Binding IsPrvaSmena}">
+                              <TextBox Grid.Column="3" Grid.Row="1" Text="{Binding PrvaSmena2kl, Converter={StaticResource ZeroIfEmptyConverter}, StringFormat=#}" Style="{StaticResource InputTextBox}" IsEnabled="{Binding IsPrvaSmena}" KeyUp="TextBox_KeyUp">
                                 <i:Interaction.Triggers>
                                   <i:EventTrigger EventName="GotFocus">
                                     <i:InvokeCommandAction Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,
-                                      AncestorType=UserControl}, Path=DataContext.GotFocusCommand}"
-                                      CommandParameter="{Binding}"/>
+                                    AncestorType=UserControl}, Path=DataContext.GotFocusCommand}"
+                                    CommandParameter="{Binding}"/>
                                   </i:EventTrigger>
                                   <i:EventTrigger EventName="LostFocus">
                                     <i:InvokeCommandAction Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,
-                                      AncestorType=UserControl}, Path=DataContext.LostFocusCommand}"
-                                      CommandParameter="{Binding}"/>
+                                    AncestorType=UserControl}, Path=DataContext.LostFocusCommand}"
+                                    CommandParameter="{Binding}"/>
                                   </i:EventTrigger>
                                 </i:Interaction.Triggers>
                               </TextBox>
 
-                              <TextBox Grid.Column="3" Grid.Row="2" Text="{Binding DrugaSmena2kl, Converter={StaticResource ZeroIfEmptyConverter}, StringFormat=#}" Style="{StaticResource InputTextBox}" IsEnabled="{Binding IsDrugaSmena}">
+                              <TextBox Grid.Column="3" Grid.Row="2" Text="{Binding DrugaSmena2kl, Converter={StaticResource ZeroIfEmptyConverter}, StringFormat=#}" Style="{StaticResource InputTextBox}" IsEnabled="{Binding IsDrugaSmena}" KeyUp="TextBox_KeyUp">
                                 <i:Interaction.Triggers>
                                   <i:EventTrigger EventName="GotFocus">
                                     <i:InvokeCommandAction Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,
-                                      AncestorType=UserControl}, Path=DataContext.GotFocusCommand}"
-                                      CommandParameter="{Binding}"/>
+                                    AncestorType=UserControl}, Path=DataContext.GotFocusCommand}"
+                                    CommandParameter="{Binding}"/>
                                   </i:EventTrigger>
                                   <i:EventTrigger EventName="LostFocus">
                                     <i:InvokeCommandAction Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,
-                                      AncestorType=UserControl}, Path=DataContext.LostFocusCommand}"
-                                      CommandParameter="{Binding}"/>
+                                    AncestorType=UserControl}, Path=DataContext.LostFocusCommand}"
+                                    CommandParameter="{Binding}"/>
                                   </i:EventTrigger>
                                 </i:Interaction.Triggers>
                               </TextBox>
 
-                              <TextBox Grid.Column="3" Grid.Row="3" Text="{Binding TrecaSmena2kl, Converter={StaticResource ZeroIfEmptyConverter}, StringFormat=#}" Style="{StaticResource InputTextBox}" IsEnabled="{Binding IsTrecaSmena}">
+                              <TextBox Grid.Column="3" Grid.Row="3" Text="{Binding TrecaSmena2kl, Converter={StaticResource ZeroIfEmptyConverter}, StringFormat=#}" Style="{StaticResource InputTextBox}" IsEnabled="{Binding IsTrecaSmena}" KeyUp="TextBox_KeyUp">
                                 <i:Interaction.Triggers>
                                   <i:EventTrigger EventName="GotFocus">
                                     <i:InvokeCommandAction Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,
-                                      AncestorType=UserControl}, Path=DataContext.GotFocusCommand}"
-                                      CommandParameter="{Binding}"/>
+                                    AncestorType=UserControl}, Path=DataContext.GotFocusCommand}"
+                                    CommandParameter="{Binding}"/>
                                   </i:EventTrigger>
                                   <i:EventTrigger EventName="LostFocus">
                                     <i:InvokeCommandAction Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,
-                                      AncestorType=UserControl}, Path=DataContext.LostFocusCommand}"
-                                      CommandParameter="{Binding}"/>
+                                    AncestorType=UserControl}, Path=DataContext.LostFocusCommand}"
+                                    CommandParameter="{Binding}"/>
                                   </i:EventTrigger>
                                 </i:Interaction.Triggers>
                               </TextBox>
 
-                              <ComboBox Grid.Column="1" Grid.Row="1" ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.Radnici}" ItemTemplate="{StaticResource ListaRadnikaTemplate}" SelectedValuePath="ID" SelectedValue="{Binding PrvaSmenaRadnikID}">
+                              <ComboBox Grid.Column="1" Grid.Row="1" ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.Radnici}" ItemTemplate="{StaticResource ListaRadnikaTemplate}" SelectedValuePath="ID" SelectedValue="{Binding PrvaSmenaRadnikID}" MinWidth="90">
                                 <i:Interaction.Triggers>
                                   <i:EventTrigger EventName="GotFocus">
                                     <i:InvokeCommandAction Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,
-                                      AncestorType=UserControl}, Path=DataContext.GotFocusCommand}"
-                                      CommandParameter="{Binding}"/>
+                                    AncestorType=UserControl}, Path=DataContext.GotFocusCommand}"
+                                    CommandParameter="{Binding}"/>
                                   </i:EventTrigger>
                                   <i:EventTrigger EventName="LostFocus">
                                     <i:InvokeCommandAction Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,
-                                      AncestorType=UserControl}, Path=DataContext.LostFocusCommand}"
-                                      CommandParameter="{Binding}"/>
+                                    AncestorType=UserControl}, Path=DataContext.LostFocusCommand}"
+                                    CommandParameter="{Binding}"/>
                                   </i:EventTrigger>
                                 </i:Interaction.Triggers>
-                                </ComboBox>
+                              </ComboBox>
 
                               <ComboBox Grid.Column="1" Grid.Row="2" ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.Radnici}" ItemTemplate="{StaticResource ResourceKey=ListaRadnikaTemplate}" SelectedValuePath="ID" SelectedValue="{Binding DrugaSmenaRadnikID}">
                                 <i:Interaction.Triggers>
                                   <i:EventTrigger EventName="GotFocus">
                                     <i:InvokeCommandAction Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,
-                                      AncestorType=UserControl}, Path=DataContext.GotFocusCommand}"
-                                      CommandParameter="{Binding}"/>
+                                    AncestorType=UserControl}, Path=DataContext.GotFocusCommand}"
+                                    CommandParameter="{Binding}"/>
                                   </i:EventTrigger>
                                   <i:EventTrigger EventName="LostFocus">
                                     <i:InvokeCommandAction Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,
-                                      AncestorType=UserControl}, Path=DataContext.LostFocusCommand}"
-                                      CommandParameter="{Binding}"/>
+                                    AncestorType=UserControl}, Path=DataContext.LostFocusCommand}"
+                                    CommandParameter="{Binding}"/>
                                   </i:EventTrigger>
                                 </i:Interaction.Triggers>
                               </ComboBox>
@@ -285,32 +493,27 @@
                                 <i:Interaction.Triggers>
                                   <i:EventTrigger EventName="GotFocus">
                                     <i:InvokeCommandAction Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,
-                                      AncestorType=UserControl}, Path=DataContext.GotFocusCommand}"
-                                      CommandParameter="{Binding}"/>
+                                    AncestorType=UserControl}, Path=DataContext.GotFocusCommand}"
+                                    CommandParameter="{Binding}"/>
                                   </i:EventTrigger>
                                   <i:EventTrigger EventName="LostFocus">
                                     <i:InvokeCommandAction Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,
-                                      AncestorType=UserControl}, Path=DataContext.LostFocusCommand}"
-                                      CommandParameter="{Binding}"/>
+                                    AncestorType=UserControl}, Path=DataContext.LostFocusCommand}"
+                                    CommandParameter="{Binding}"/>
                                   </i:EventTrigger>
                                 </i:Interaction.Triggers>
                               </ComboBox>
                             </Grid>
                           </Border>
                         </Grid>
+                      </DataTemplate>
+                    </ListBox.ItemTemplate>
+                  </ListBox>
+                </ScrollViewer>
 
-                  </DataTemplate>
-                </ListBox.ItemTemplate>
-                </ListBox>
-                </StackPanel>
+              </Grid>
 
-                <!--<Path Stretch="Fill" Margin="40,0" Width="50" Height="50"
-              Fill="Green"   
-              Data="M4.1561281,2.2702953 L4.8524521,2.2702954 4.8509674,3.963097 5.8969377,3.9630803 5.8969378,5.0916036 4.8524628,5.1061913 4.8524521,6.7843885 4.1561281,6.7843887 4.1559771,5.0877741 3.1116421,5.0916036 3.1116421,3.9630803 4.1556735,3.9654722 4.1561281,2.2702953 z"/>-->
-
-            </StackPanel>
-
-          </Border>
+            </Border>
 
           </DataTemplate>
         </ItemsControl.ItemTemplate>

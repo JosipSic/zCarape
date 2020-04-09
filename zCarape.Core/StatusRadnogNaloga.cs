@@ -9,6 +9,5 @@ namespace zCarape.Core
         public static byte Aktivan = 1;
         public static byte Pauziran = 2;
         public static byte Zatvoren = 9;
-        public static byte Neodredjen = 10;
     }
 }

@@ -20,6 +20,7 @@ namespace zCarape.Core.Business
         public long Cilj { get; set; }
         public bool Hitno { get; set; }
         public byte StatusNaloga { get; set; }
+        public string Podsetnik { get; set; }
 
         // Uradjeno
         private long _uradjeno;
@@ -27,7 +28,9 @@ namespace zCarape.Core.Business
         {
             get { return _uradjeno; }
             set { _uradjeno = value; 
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Uradjeno")); 
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Uradjeno"));
+                Fali = Cilj - value;
+                IsOstvarenCilj = Fali <= 0;
             }
         }
 
@@ -41,5 +44,16 @@ namespace zCarape.Core.Business
             }
         }
 
+        // IsOstvarenCilj
+        private bool _isOstvarenCilj;
+        public bool IsOstvarenCilj
+        {
+            get { return _isOstvarenCilj; }
+            set
+            {
+                _isOstvarenCilj = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsOstvarenCilj"));
+            }
+        }
     }
 }
