@@ -22,6 +22,7 @@
     <None Remove="Images\SaveBlack.png" />
     <None Remove="Images\SaveBlueGray.png" />
     <None Remove="Images\Undo.png" />
+    <None Remove="Images\view.png" />
     <None Remove="Instalacija.txt" />
   </ItemGroup>
   <ItemGroup>
@@ -44,5 +45,6 @@
     <Resource Include="Images\SaveBlack.png" />
     <Resource Include="Images\SaveBlueGray.png" />
     <Resource Include="Images\Undo.png" />
+    <Resource Include="Images\view.png" />
   </ItemGroup>
 </Project>

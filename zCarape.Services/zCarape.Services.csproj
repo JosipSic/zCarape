@@ -1,15 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.112" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\zCarape.Services.Interfaces\zCarape.Services.Interfaces.csproj" />
   </ItemGroup>
-
 </Project>

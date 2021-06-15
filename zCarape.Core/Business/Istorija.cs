@@ -10,7 +10,7 @@ namespace zCarape.Core.Business
     {
 		public event PropertyChangedEventHandler PropertyChanged;
 
-		private void NotifyPropertyChanged([CallerMemberName] string property="")
+        private void NotifyPropertyChanged([CallerMemberName] string property = "")
 		{
 			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
 		}
@@ -101,15 +101,18 @@ namespace zCarape.Core.Business
 		public string Radnik { get; set; }
 
 
-		// IsZadnji
-		private bool _isZadnji;
-		public bool IsZadnji
+		// IsNotZadnji
+		private bool _isNotZadnji;
+		public bool IsNotZadnji
 		{
-			get { return _isZadnji; }
-			set { _isZadnji = value;
-				NotifyPropertyChanged();
+			get { return _isNotZadnji; }
+			set { _isNotZadnji = value;
+				//NotifyPropertyChanged();
 			}
 		}
+
+		// IsNotPrvi
+		public bool IsNotPrvi { get; set; }
 
 	}
 }

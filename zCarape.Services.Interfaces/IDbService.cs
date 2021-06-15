@@ -109,7 +109,12 @@ namespace zCarape.Services.Interfaces
 
         #endregion //Predajnica
 
-        #region
+        #region Business
+        RadniNalogPregled GetRadniNalogPregled(long radniNalogID);
+        IEnumerable<IzvestajStavka> GetStavkeZaIzvestaj(DateTime? datumOd = null, DateTime? datumDo = null);
+        #endregion
+
+        #region Lica
 
         IEnumerable<Lice> GetAllAktivnaLica();
 

@@ -20,5 +20,10 @@ namespace Proizvodnja.Views
                 ((TextBox)sender).MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
             }
         }
+
+        private void ListBoxItem_RequestBringIntoView(object sender, System.Windows.RequestBringIntoViewEventArgs e)
+        {
+            e.Handled = true;
+        }
     }
 }

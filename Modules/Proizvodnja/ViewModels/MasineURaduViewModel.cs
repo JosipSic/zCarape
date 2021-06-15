@@ -12,6 +12,7 @@ using zCarape.Core;
 using Prism.Events;
 using System.Windows;
 using System.Threading.Tasks;
+using Prism.Services.Dialogs;
 
 namespace Proizvodnja.ViewModels
 {
@@ -22,6 +23,7 @@ namespace Proizvodnja.ViewModels
 
         private readonly IDbService _dbService;
         private readonly IRegionManager _regionManager;
+        private readonly IDialogService _dialogService;
 
         #endregion // Fields
 
@@ -258,14 +260,31 @@ namespace Proizvodnja.ViewModels
             MoveLeftZadatak(parameter);
         }
 
+        // PregledRnCommand
+        private DelegateCommand<long?> _pregledRnCommand;
+        public DelegateCommand<long?> PregledRnCommand =>
+            _pregledRnCommand ?? (_pregledRnCommand = new DelegateCommand<long?>(ExecutePregledRnCommand));
+
+        void ExecutePregledRnCommand(long? parameter)
+        {
+            if (parameter == null || parameter == 0)
+            {
+                return;
+            }
+            IDialogParameters dialogParameters = new DialogParameters();
+            dialogParameters.Add("ID", parameter);
+            _dialogService.Show("PregledRnDijalog", dialogParameters, null);
+        }
+
         #endregion //Commands
 
         #region Ctor
 
-        public MasineURaduViewModel(IDbService dbService, IRegionManager regionManager)
+        public MasineURaduViewModel(IDbService dbService, IRegionManager regionManager, IDialogService dialogService)
         {
             _dbService = dbService;
             _regionManager = regionManager;
+            _dialogService = dialogService;
             FormirajListuRadnika();
             FormirajSpisakMasinaURadu();
             OsveziFormuUOdredjenoVreme();
@@ -525,10 +544,6 @@ namespace Proizvodnja.ViewModels
             {
                 masinaURadu.Istorija = istorijaTemp;
             }
-            else if (kretanje==Kretanje.Napred && masinaURadu.Istorija!=null)
-            {
-                masinaURadu.Istorija.IsZadnji = true;
-            }
         }
 
         private void MoveLeftZadatak(Zadatak zadatak2)
@@ -540,12 +555,15 @@ namespace Proizvodnja.ViewModels
             Zadatak zadatak1 = (from m in MasineURadu
                                 where m.MasinaID == zadatak2.MasinaID
                                 from z in m.Zadaci
-                                where z.StatusMasine == zadatak2.StatusMasine && z.Hitno == zadatak2.Hitno
+                                where z.NalogURadu.StatusNaloga == zadatak2.NalogURadu.StatusNaloga 
+                                && z.Hitno == zadatak2.Hitno
+                                && z.Redosled <= zadatak2.Redosled 
+                                && z.ID!=zadatak2.ID
                                 orderby z.Redosled descending
                                 select z).FirstOrDefault();
             if (zadatak1 == null) return;
 
-            _dbService.SetRedosledAngazovaneMasine(zadatak2.ID, zadatak2.Redosled - 1);
+            _dbService.SetRedosledAngazovaneMasine(zadatak2.ID, zadatak1.Redosled - 1);
             OsveziFormu();
         }
 

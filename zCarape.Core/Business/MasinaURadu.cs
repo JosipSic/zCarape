@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Text;
 
@@ -20,7 +21,7 @@ namespace zCarape.Core.Business
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Istorija"));
             }
         }
-        public List<Zadatak> Zadaci { get; set; }
+        public ObservableCollection<Zadatak> Zadaci { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
     }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
@@ -390,7 +391,10 @@ namespace zCarape.Services
                 int redosled;
                 byte statusMasine;
                 string podsetnik;
-                bool isNotPrvi;
+                bool canGoLeft;
+
+                bool lastHitno=false;
+                byte lastStatusNaloga=1;
 
                 while (dr.Read())
                 {
@@ -418,14 +422,17 @@ namespace zCarape.Services
                     MasinaURadu masinaURadu = masineURadu.FirstOrDefault(m => m.MasinaID == masinaID);
                     if (masinaURadu==null)
                     {
-                        masinaURadu = new MasinaURadu() { MasinaID = masinaID, MasinaNaziv = masinaNaziv, Zadaci = new List<Zadatak>() };
+                        masinaURadu = new MasinaURadu() { MasinaID = masinaID, MasinaNaziv = masinaNaziv, Zadaci = new ObservableCollection<Zadatak>() };
                         masineURadu.Add(masinaURadu);
-                        isNotPrvi = false; // Zadatak koji se dodaje masini bice prvi
+                        canGoLeft = false; // Zadatak koji se dodaje masini bice prvi
                     }
                     else
                     {
-                        isNotPrvi = true;
+                        canGoLeft =  lastStatusNaloga==statusNaloga && lastHitno==hitno;
                     }
+
+                    lastStatusNaloga = statusNaloga;
+                    lastHitno = hitno;
 
                     // Radni nalog koji se dodaje jednoj ili na vise masina
                     NalogURadu nalogURadu = (from m in masineURadu
@@ -466,7 +473,7 @@ namespace zCarape.Services
                         Redosled = redosled,
                         NalogURadu = nalogURadu,
                         DatumPredajnice = _datum,
-                        IsNotPrvi = isNotPrvi
+                        CanGoLeft = canGoLeft
                     };
 
                     Predajnica p;
@@ -595,9 +602,17 @@ namespace zCarape.Services
             con.Open();
             using var cmd = new SQLiteCommand(con);
             cmd.Parameters.AddWithValue("@id", id);
-            cmd.CommandText = "DELETE FROM masina WHERE id=@id";
-            return cmd.ExecuteNonQuery() == 1;
-        }
+            cmd.CommandText = "DELETE FROM masine WHERE id=@id";
+            try
+            {
+                  return cmd.ExecuteNonQuery() == 1;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message + "\n" + ex.Source);
+            }
+            return false;
+       }
 
         public Masina GetByNazivMasina(string naziv)
         {
@@ -1218,12 +1233,28 @@ namespace zCarape.Services
 
         public bool IzbrisiVelicinu(long id)
         {
+            // Provera da li postoje artikli sa unetom velicimom
+            IEnumerable<string> artikliSaVelicinom = getSifreArtikalaByVelicinaId(id);
+            if (artikliSaVelicinom.Count()>0)
+            {
+                MessageBox.Show("Nije moguce izbrisati veličinu zato što postoje artikli kojima je dodeljena ova veličina: " + string.Join(", ", artikliSaVelicinom),"",MessageBoxButton.OK,MessageBoxImage.Exclamation);
+                return false;
+            }
+
             using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
             con.Open();
             using var cmd = new SQLiteCommand(con);
             cmd.Parameters.AddWithValue("@id", id);
             cmd.CommandText = "DELETE FROM velicine WHERE id=@id";
-            return cmd.ExecuteNonQuery() == 1;
+            try
+            {
+                  return cmd.ExecuteNonQuery() == 1;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                return false;
+            }
         }
 
 
@@ -1316,6 +1347,28 @@ namespace zCarape.Services
 
         }
 
+        private IEnumerable<string> getSifreArtikalaByVelicinaId(long velicinaId)
+        {
+            List<string> lista = new List<string>();
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+            cmd.CommandText = "SELECT Artikli.Sifra FROM VelicineArtikla INNER JOIN Artikli ON VelicineArtikla.ArtikalID = Artikli.ID WHERE VelicineArtikla.VelicinaID = @velicinaId";
+            cmd.Parameters.AddWithValue("@velicinaId", velicinaId);
+
+            using SQLiteDataReader dr = cmd.ExecuteReader();
+
+            if (dr.HasRows)
+            {
+                while (dr.Read())
+                {
+                    lista.Add((string)dr[0]); ;
+                }
+            }
+
+            return lista;
+        }
 
         #endregion
 
@@ -1489,7 +1542,7 @@ namespace zCarape.Services
             using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
             con.Open();
 
-            bool isZadnji = false;
+            bool isNotZadnji=true, isNotPrvi = true;
             string strTrenutni = string.Empty;
             string order = " DESC ";
             using var cmd = new SQLiteCommand(con);
@@ -1502,10 +1555,6 @@ namespace zCarape.Services
                 {
                     order = " ASC ";
                 }
-            }
-            else
-            {
-                isZadnji = true;
             }
             cmd.CommandText = "SELECT Predajnice.Kolicina, Predajnice.Smena, Predajnice.DrugaKl, Predajnice.Datum, " +
                            "RadniNalozi.ID as RadniNalogID, RadniNalozi.ArtikalID," +
@@ -1520,33 +1569,58 @@ namespace zCarape.Services
                            "INNER JOIN DezeniArtikla ON RadniNalozi.DezenArtiklaID = DezeniArtikla.ID " +
                            "WHERE Predajnice.MasinaID = @masinaid AND RadniNalozi.Status = 9 " +
                            strTrenutni +
-                           "ORDER BY Predajnice.Datum"+order+", Predajnice.ID"+order+"LIMIT 1";
+                           "GROUP BY RadniNalozi.ID " +
+                           "ORDER BY Predajnice.Datum"+order+", Predajnice.ID"+order+"LIMIT 2";
 
             try
             {
-                using SQLiteDataReader dr = cmd.ExecuteReader(System.Data.CommandBehavior.SingleRow);
+                using SQLiteDataReader dr = cmd.ExecuteReader();
 
                 if (dr.HasRows)
                 {
-                    dr.Read();
-
-                    string ime = (dr["ime"] == DBNull.Value) ? string.Empty : (string)dr["ime"];
-                    string prezime = (dr["prezime"] == DBNull.Value) ? string.Empty : (string)dr["prezime"];
-
-                    return new Istorija()
+                    Istorija istorija = new Istorija();
+                    int brojReda = 0;
+                    while (dr.Read())
                     {
-                        RadniNalogID = (long)dr["radninalogid"],
-                        ArtikalNaziv = (dr["artikalnaziv"] == DBNull.Value) ? string.Empty : (string)dr["artikalnaziv"],
-                        ArtikalVelicina = (dr["artikalvelicina"] == DBNull.Value) ? string.Empty : (string)dr["artikalvelicina"],
-                        ArtikalDezen = (dr["artikaldezen"] == DBNull.Value) ? string.Empty : (string)dr["artikaldezen"],
-                        Slika1 = (dr["slika1"] == DBNull.Value) ? string.Empty : (string)dr["slika1"],
-                        Kolicina = (long)dr["kolicina"],
-                        DrugaKl = (long)dr["drugakl"],
-                        Smena = (byte)(long)dr["smena"],
-                        Radnik = ime+" "+prezime,
-                        Datum = Helper.ConvertToDateTimeFromSqLite((string)dr["datum"]),
-                        IsZadnji = isZadnji
+                        brojReda++;
+                        if (brojReda == 1)
+                        {
+                            string ime = (dr["ime"] == DBNull.Value) ? string.Empty : (string)dr["ime"];
+                            string prezime = (dr["prezime"] == DBNull.Value) ? string.Empty : (string)dr["prezime"];
+
+                            istorija.RadniNalogID = (long)dr["radninalogid"];
+                            istorija.ArtikalNaziv = (dr["artikalnaziv"] == DBNull.Value) ? string.Empty : (string)dr["artikalnaziv"];
+                            istorija.ArtikalVelicina = (dr["artikalvelicina"] == DBNull.Value) ? string.Empty : (string)dr["artikalvelicina"];
+                            istorija.ArtikalDezen = (dr["artikaldezen"] == DBNull.Value) ? string.Empty : (string)dr["artikaldezen"];
+                            istorija.Slika1 = (dr["slika1"] == DBNull.Value) ? string.Empty : (string)dr["slika1"];
+                            istorija.Kolicina = (long)dr["kolicina"];
+                            istorija.DrugaKl = (long)dr["drugakl"];
+                            istorija.Smena = (byte)(long)dr["smena"];
+                            istorija.Radnik = ime + " " + prezime;
+                            istorija.Datum = Helper.ConvertToDateTimeFromSqLite((string)dr["datum"]);
+                        }
                     };
+
+                    if (trenutniRnID == 0)
+                    {
+                        isNotZadnji = false;
+                        isNotPrvi = brojReda>1;
+                    }
+                    else if (kretanje == Kretanje.Napred)
+                    {
+                        isNotPrvi = true;
+                        isNotZadnji = brojReda > 1;
+                    }
+                    else if (kretanje == Kretanje.Nazad)
+                    {
+                        isNotPrvi = brojReda > 1;
+                        isNotZadnji = true;
+                    }
+
+                    istorija.IsNotPrvi = isNotPrvi;
+                    istorija.IsNotZadnji = isNotZadnji;
+
+                    return istorija;
                 }
                 else
                 {
@@ -1797,6 +1871,183 @@ namespace zCarape.Services
         }
 
         #endregion //Predajnica
+
+        #region Business
+        public RadniNalogPregled GetRadniNalogPregled(long radniNalogID)
+        {
+            if (radniNalogID == 0)
+            {
+                return null;
+            }
+
+            RadniNalogPregled radniNalogPregled;
+
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+            cmd.CommandText = "SELECT rn.id,rn.artikalid,rn.dezenartiklaid,rn.velicinaid,rn.cilj,rn.napravljeno,rn.opis,rn.podsetnik,rn.hitno,status,rn.vremeunosa," +
+            "a.Sifra as ArtikalSifra, a.Naziv as ArtikalNaziv, da.Naziv as DezenNaziv, da.Opis as DezenOpis, da.Putanja as DezenPutanja," +
+            "da.Slika1, da.Slika2, da.Slika3, v.Oznaka as VelicinaOznaka" +
+            " FROM RadniNalozi rn" +
+            " inner join Artikli a on rn.ArtikalID = a.ID" +
+            " inner join DezeniArtikla da on a.ID = da.ArtikalID" +
+            " inner join Velicine v on rn.VelicinaID = v.ID WHERE rn.ID=@id";
+            cmd.Parameters.AddWithValue("@id", radniNalogID);
+
+            try
+            {
+                using SQLiteDataReader dr = cmd.ExecuteReader(System.Data.CommandBehavior.SingleRow);
+
+                if (dr.HasRows)
+                {
+                    dr.Read();
+
+                    radniNalogPregled = new RadniNalogPregled()
+                    {
+                        ID = (long)dr["id"],
+                        ArtikalID = (long)dr["artikalid"],
+                        DezenArtiklaID = (long)dr["dezenartiklaid"],
+                        VelicinaID = (long)dr["velicinaid"],
+                        Cilj = (long)dr["cilj"],
+                        Napravljeno = (long)dr["napravljeno"],
+                        Opis = (dr["opis"] == DBNull.Value) ? string.Empty : (string)dr["opis"],
+                        Podsetnik = (dr["podsetnik"] == DBNull.Value) ? string.Empty : (string)dr["podsetnik"],
+                        Hitno = (long)dr["hitno"] == 1,
+                        Status = (byte)(long)dr["status"],
+                        VremeUnosa = Helper.ConvertToDateTimeFromSqLite(dr["vremeunosa"].ToString()),
+                        ArtikalSifra = (dr["artikalsifra"] == DBNull.Value) ? string.Empty : (string)dr["artikalsifra"],
+                        ArtikalNaziv = (dr["artikalnaziv"] == DBNull.Value) ? string.Empty : (string)dr["artikalnaziv"],
+                        DezenNaziv = (dr["dezennaziv"] == DBNull.Value) ? string.Empty : (string)dr["dezennaziv"],
+                        DezenOpis = (dr["dezenopis"] == DBNull.Value) ? string.Empty : (string)dr["dezenopis"],
+                        DezenPutanja = (dr["dezenputanja"] == DBNull.Value) ? string.Empty : (string)dr["dezenputanja"],
+                        Slika1 = (dr["slika1"] == DBNull.Value) ? string.Empty : (string)dr["slika1"],
+                        Slika2 = (dr["slika2"] == DBNull.Value) ? string.Empty : (string)dr["slika2"],
+                        Slika3 = (dr["slika3"] == DBNull.Value) ? string.Empty : (string)dr["slika3"],
+                        VelicinaOznaka = (dr["velicinaoznaka"] == DBNull.Value) ? string.Empty : (string)dr["velicinaoznaka"]
+                    };
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                return null;
+            }
+
+            // Popunjavam listu predajnica
+            cmd.CommandText = "SELECT p.*,m.Naziv as MasinaNaziv, l.Ime as LiceIMe, l.Prezime as LicePrezime  FROM Predajnice p" +
+                            " inner join Masine m ON p.MasinaID = m.ID" +
+                            " inner join Lica l ON p.LiceID = l.ID WHERE p.radninalogid=@radninalogid";
+            cmd.Parameters.AddWithValue("@radninalogid", radniNalogID);
+
+            try
+            {
+                using SQLiteDataReader dr2 = cmd.ExecuteReader();
+
+                if (dr2.HasRows)
+                {
+                    while (dr2.Read())
+                    {
+                        PredajnicaPregled pp = new PredajnicaPregled()
+                        {
+                            ID = (long)dr2["id"],
+                            RadniNalogID = (long)dr2["radninalogid"],
+                            MasinaID = (long)dr2["masinaid"],
+                            Datum = Helper.ConvertToDateTimeFromSqLite((string)dr2["datum"]),
+                            LiceID = (long)dr2["liceid"],
+                            Smena = (byte)(long)dr2["smena"],
+                            Kolicina = (long)dr2["kolicina"],
+                            DrugaKl = (long)dr2["drugakl"],
+                            VremeUnosa = Helper.ConvertToDateTimeFromSqLite((string)dr2["vremeunosa"]),
+                            MasinaNaziv = (dr2["masinanaziv"] == DBNull.Value) ? string.Empty : (string)dr2["masinanaziv"],
+                            LiceIme = (dr2["liceime"] == DBNull.Value) ? string.Empty : (string)dr2["liceime"],
+                            LicePrezime = (dr2["liceprezime"] == DBNull.Value) ? string.Empty : (string)dr2["liceprezime"],
+                        };
+                        pp.LicePrezimeIme = pp.LicePrezime + " " + pp.LicePrezime;
+
+                        radniNalogPregled.Predajnice.Add(pp); ;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+
+            return radniNalogPregled;
+        }
+
+        public IEnumerable<IzvestajStavka> GetStavkeZaIzvestaj(DateTime? datumOd=null, DateTime? datumDo=null)
+        {
+            List<IzvestajStavka> lista = new List<IzvestajStavka>();
+
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+
+            string whereSql = string.Empty;
+            if (datumOd.HasValue && datumDo.HasValue)
+            {
+                whereSql = " WHERE datum BETWEEN @datumOd and @datumDo ";
+                cmd.Parameters.AddWithValue("@datumOd", datumOd);
+                cmd.Parameters.AddWithValue("@datumDo", datumDo);
+            }
+            else if (datumOd.HasValue)
+            {
+                whereSql = " WHERE datum >= @datumOd ";
+                cmd.Parameters.AddWithValue("@datumOd", datumOd);
+                cmd.Parameters.AddWithValue("@datumDo", datumDo);
+            }
+            else if (datumDo.HasValue)
+            {
+                whereSql = " WHERE datum <= datumDo";
+                cmd.Parameters.AddWithValue("@datumDo", datumDo);
+            }
+
+            cmd.CommandText = "SELECT a.Sifra, a.Naziv, v.Oznaka as Velicina, da.Naziv as Dezen, rn.ID as RadniNalog, m.Naziv as Masina, p.Smena, p.Kolicina, p.DrugaKl, p.Datum, l.Ime || ' ' || l.Prezime AS Radnik, strftime('%m', p.Datum) as Mesec, strftime('%Y', p.Datum) as Godina " +
+                                "FROM Predajnice p " +
+                                "INNER JOIN RadniNalozi rn ON rn.ID = p.RadniNalogID " +
+                                "INNER JOIN Lica l ON l.ID = p.LiceID " +
+                                "INNER JOIN Artikli a ON a.ID = RN.ArtikalID " +
+                                "INNER JOIN Velicine v ON v.ID = rn.VelicinaID " +
+                                "INNER JOIN DezeniArtikla da ON da.ID = rn.DezenArtiklaID " +
+                                "INNER JOIN Masine m ON m.ID = p.MasinaID" +
+                                whereSql;
+            using SQLiteDataReader dr = cmd.ExecuteReader();
+
+            if (dr.HasRows)
+            {
+                while (dr.Read())
+                {
+
+                    lista.Add(new IzvestajStavka()
+                    {
+                        Sifra = (string)dr["sifra"],
+                        Naziv = (string)dr["naziv"],
+                        Velicina = (string)dr["velicina"],
+                        Dezen = (string)dr["dezen"],
+                        RadniNalog = (long)dr["radninalog"],
+                        Masina = (string)dr["masina"],
+                        Smena = (long)dr["smena"],
+                        Kolicina = (long)dr["kolicina"],
+                        DrugaKl = (long)dr["drugakl"],
+                        Datum = Helper.ConvertToDateTimeFromSqLite((string)dr["datum"]),
+                        Radnik = (string)dr["radnik"],
+                        Mesec = (string)dr["mesec"],
+                        Godina = (string)dr["godina"]
+                    }); ;
+
+                }
+            }
+            return lista;
+        }
+
+        #endregion
 
     }
 }

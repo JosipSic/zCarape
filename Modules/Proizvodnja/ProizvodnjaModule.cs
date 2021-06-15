@@ -22,17 +22,17 @@ namespace Proizvodnja
             // Registracija za navigaciju
             containerRegistry.RegisterForNavigation<MasineURadu, MasineURaduViewModel>();
             containerRegistry.RegisterForNavigation<Masine, MasineViewModel>();
-            containerRegistry.RegisterForNavigation<RadniNalogUnos, RadniNalogUnosViewModel>();
             containerRegistry.RegisterForNavigation<Izvestaji, IzvestajiViewModel>();
             containerRegistry.RegisterForNavigation<Predajnica, PredajnicaViewModel>();
             containerRegistry.RegisterForNavigation<NoviRN1Artikal, NoviRN1ArtikalViewModel>();
             containerRegistry.RegisterForNavigation<NoviRN2Dezen, NoviRN2DezenViewModel>();
             containerRegistry.RegisterForNavigation<NoviRN3, NoviRN3ViewModel>();
 
+            containerRegistry.RegisterDialog<PregledRnDijalog, PregledRnDijalogViewModel>();
+
             // Za svaki View vezujem odgovarajuci ViewModel (kod radi i bez toga posto sledi Prizm konvenziju, ali je ovako brze posto nema potrebe da se koristi refleksija
             ViewModelLocationProvider.Register<Proizvodnja.Views.MasineURadu, Proizvodnja.ViewModels.MasineURaduViewModel>();
             ViewModelLocationProvider.Register<Masine, MasineViewModel>();
-            ViewModelLocationProvider.Register<RadniNalogUnos, RadniNalogUnosViewModel>();
             ViewModelLocationProvider.Register<Izvestaji, IzvestajiViewModel>();
             ViewModelLocationProvider.Register<Predajnica, PredajnicaViewModel>();
             ViewModelLocationProvider.Register<NoviRN2Dezen, NoviRN2DezenViewModel>();

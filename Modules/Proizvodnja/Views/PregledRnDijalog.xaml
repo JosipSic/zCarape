@@ -1,0 +1,79 @@
+﻿<UserControl xmlns:igWPF="http://schemas.infragistics.com/xaml/wpf" 
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:prism="http://prismlibrary.com/"             
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="Proizvodnja.Views.PregledRnDijalog"             
+             prism:ViewModelLocator.AutoWireViewModel="True" Width="800" 
+             Height="800">
+  <UserControl.Resources>
+    <Style TargetType="TextBlock">
+      <Setter Property="FontSize" Value="14"/>
+    </Style>
+  </UserControl.Resources>
+  <!--<Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="391*"/>
+      <ColumnDefinition Width="9*"/>
+    </Grid.ColumnDefinitions>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+    <StackPanel Grid.Row="0" Orientation="Horizontal" Grid.ColumnSpan="2" Margin="0,0,0,747" Grid.RowSpan="3">
+      <StackPanel.Resources>
+        <Style TargetType="TextBlock">
+          <Setter Property="FontSize" Value="14"/>
+          <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+      </StackPanel.Resources>
+      <TextBlock Text="{Binding Nalog.ArtikalSifra}" Margin="5,2,10,2"/>
+      <TextBlock Text="{Binding Nalog.ArtikalNaziv}" Margin="0,2,10,2"/>
+      <TextBlock Text="{Binding Nalog.DezenNaziv}" Margin="0,2,10,2"/>
+      <TextBlock Text="{Binding Nalog.VelicinaOznaka}" Margin="0,2,10,2"/>
+    </StackPanel>
+    <igWPF:XamDataGrid Name="xamDataGrid" DataSource="{Binding Path=Predajnice}" Grid.Row="2" Grid.ColumnSpan="2" >
+      <igWPF:XamDataGrid.FieldLayoutSettings>
+        <igWPF:FieldLayoutSettings AllowAddNew="False" AllowClipboardOperations="None" AutoGenerateFields="False" AllowDelete="False" />
+      </igWPF:XamDataGrid.FieldLayoutSettings>
+      <igWPF:XamDataGrid.FieldSettings>
+        <igWPF:FieldSettings AllowEdit="True" AllowGroupBy="True" FilterClearButtonVisibility="Visible" IsAutoEditModeEnabled="False" />
+      </igWPF:XamDataGrid.FieldSettings>
+      <igWPF:XamDataGrid.FieldLayouts>
+        <igWPF:FieldLayout Key="PredajnicaPregled">
+          <igWPF:FieldLayout.SortedFields>
+            <igWPF:FieldSortDescription Direction="Ascending" FieldName="Kolicina" IsGroupBy="False" />
+          </igWPF:FieldLayout.SortedFields>
+          <igWPF:DateTimeField AllowEdit="False" Name="Datum">
+            <igWPF:DateTimeField.Settings>
+              <igWPF:FieldSettings IsAutoEditModeEnabled="False" />
+            </igWPF:DateTimeField.Settings>
+          </igWPF:DateTimeField>
+          <igWPF:TextField AllowEdit="False" Label="Mašina" Name="MasinaNaziv">
+            <igWPF:TextField.Settings>
+              <igWPF:FieldSettings IsAutoEditModeEnabled="False" />
+            </igWPF:TextField.Settings>
+          </igWPF:TextField>
+          <igWPF:TextField AllowEdit="False" Label="Prezime i Ime" Name="LicePrezimeIme">
+            <igWPF:TextField.Settings>
+              <igWPF:FieldSettings IsAutoEditModeEnabled="False" />
+            </igWPF:TextField.Settings>
+          </igWPF:TextField>
+          <igWPF:NumericField AllowEdit="False" AllowGroupBy="False" Label="I klasa" Name="Kolicina">
+            <igWPF:NumericField.Settings>
+              <igWPF:FieldSettings IsAutoEditModeEnabled="False" SummaryDisplayArea="Bottom" SummaryUIType="MultiSelectForNumericsOnly" AllowSummaries="True"/>
+            </igWPF:NumericField.Settings>
+          </igWPF:NumericField>
+          <igWPF:NumericField AllowEdit="False" AllowGroupBy="False" Label="II klasa" Name="DrugaKl">
+            <igWPF:NumericField.Settings>
+              <igWPF:FieldSettings IsAutoEditModeEnabled="False" SummaryDisplayArea="Bottom" SummaryUIType="MultiSelectForNumericsOnly" AllowSummaries="True"/>
+            </igWPF:NumericField.Settings>
+          </igWPF:NumericField>
+        </igWPF:FieldLayout>
+      </igWPF:XamDataGrid.FieldLayouts>
+    </igWPF:XamDataGrid>
+
+    <Button Grid.Row="3" Command="{Binding CloseDialogCommand}" Content="Zatvori" Margin="10,5,10,5" Grid.ColumnSpan="2"/>
+  </Grid>-->
+</UserControl>

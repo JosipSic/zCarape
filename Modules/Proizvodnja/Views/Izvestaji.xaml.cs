@@ -1,4 +1,6 @@
-﻿using System.Windows.Controls;
+﻿using DevExpress.Xpf.Grid;
+using DevExpress.Xpf.Printing;
+using System.Windows.Controls;
 
 namespace Proizvodnja.Views
 {
@@ -10,6 +12,12 @@ namespace Proizvodnja.Views
         public Izvestaji()
         {
             InitializeComponent();
+        }
+
+        private void PrintButton_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            var link = new PrintableControlLink(IzvestajTableView, "Izvestaj");
+            PrintHelper.ShowPrintPreview(this, link);
         }
     }
 }
