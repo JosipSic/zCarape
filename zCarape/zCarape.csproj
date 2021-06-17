@@ -27,8 +27,8 @@
     <None Remove="z.ico" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DevExpress.WindowsDesktop.Wpf.Core" Version="20.2.7" />
-    <PackageReference Include="DevExpress.WindowsDesktop.Wpf.Themes.VS2019Blue" Version="20.2.7" />
+    <PackageReference Include="DevExpress.Wpf.Core" Version="21.1.3" />
+    <PackageReference Include="DevExpress.Wpf.Themes.VS2019Blue" Version="21.1.3" />
     <PackageReference Include="Prism.DryIoc" Version="7.2.0.1422" />
   </ItemGroup>
   <ItemGroup>
