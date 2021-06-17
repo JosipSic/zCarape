@@ -1967,7 +1967,7 @@ namespace zCarape.Services
                             LiceIme = (dr2["liceime"] == DBNull.Value) ? string.Empty : (string)dr2["liceime"],
                             LicePrezime = (dr2["liceprezime"] == DBNull.Value) ? string.Empty : (string)dr2["liceprezime"],
                         };
-                        pp.LicePrezimeIme = pp.LicePrezime + " " + pp.LicePrezime;
+                        pp.LicePrezimeIme = pp.LicePrezime + " " + pp.LiceIme;
 
                         radniNalogPregled.Predajnice.Add(pp); ;
                     }

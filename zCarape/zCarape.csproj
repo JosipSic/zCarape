@@ -4,7 +4,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWPF>true</UseWPF>
     <AssemblyName>zCarape</AssemblyName>
-    <ApplicationIcon>12182socks_109584.ico</ApplicationIcon>
+    <ApplicationIcon>z.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Slike\**" />
@@ -24,8 +24,11 @@
     <None Remove="Images\Undo.png" />
     <None Remove="Images\view.png" />
     <None Remove="Instalacija.txt" />
+    <None Remove="z.ico" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="DevExpress.WindowsDesktop.Wpf.Core" Version="20.2.7" />
+    <PackageReference Include="DevExpress.WindowsDesktop.Wpf.Themes.VS2019Blue" Version="20.2.7" />
     <PackageReference Include="Prism.DryIoc" Version="7.2.0.1422" />
   </ItemGroup>
   <ItemGroup>
@@ -46,5 +49,6 @@
     <Resource Include="Images\SaveBlueGray.png" />
     <Resource Include="Images\Undo.png" />
     <Resource Include="Images\view.png" />
+    <Resource Include="z.ico" />
   </ItemGroup>
 </Project>

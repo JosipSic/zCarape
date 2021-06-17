@@ -5,8 +5,11 @@
     <AssemblyName>Proizvodnja</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="DevExpress.WindowsDesktop.RichEdit.Export" Version="20.2.7" />
     <PackageReference Include="DevExpress.WindowsDesktop.Wpf.Grid" Version="20.2.7" />
+    <PackageReference Include="devexpress.windowsdesktop.wpf.pivotgrid" Version="20.2.7" />
     <PackageReference Include="Prism.Wpf" Version="7.2.0.1422" />
+    <PackageReference Include="System.Drawing.Common" Version="5.0.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\zCarape.Services.Interfaces\zCarape.Services.Interfaces.csproj" />

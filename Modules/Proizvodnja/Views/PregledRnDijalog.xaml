@@ -1,16 +1,27 @@
-﻿<UserControl xmlns:igWPF="http://schemas.infragistics.com/xaml/wpf" 
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:prism="http://prismlibrary.com/"             
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="Proizvodnja.Views.PregledRnDijalog"             
              prism:ViewModelLocator.AutoWireViewModel="True" Width="800" 
+             xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
+             xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+             xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
              Height="800">
   <UserControl.Resources>
     <Style TargetType="TextBlock">
       <Setter Property="FontSize" Value="14"/>
     </Style>
+    <DataTemplate x:Key="PrintPageHeader">
+      <dxe:TextEdit Text="{Binding Content, Mode=OneWay}"
+                    Padding="5,0,0,0"
+                    FontSize="12"
+                    IsPrintingMode="True"
+                    HorizontalContentAlignment="Left"
+                    VerticalContentAlignment="Center"
+                    Width="{Binding Path=UsablePageWidth, Mode=OneWay}"/>
+    </DataTemplate>
   </UserControl.Resources>
-  <!--<Grid>
+  <Grid>
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="391*"/>
       <ColumnDefinition Width="9*"/>
@@ -33,7 +44,7 @@
       <TextBlock Text="{Binding Nalog.DezenNaziv}" Margin="0,2,10,2"/>
       <TextBlock Text="{Binding Nalog.VelicinaOznaka}" Margin="0,2,10,2"/>
     </StackPanel>
-    <igWPF:XamDataGrid Name="xamDataGrid" DataSource="{Binding Path=Predajnice}" Grid.Row="2" Grid.ColumnSpan="2" >
+    <!--<DataGrid Name="xamDataGrid" DataSource="{Binding Path=Predajnice}" Grid.Row="2" Grid.ColumnSpan="2" >
       <igWPF:XamDataGrid.FieldLayoutSettings>
         <igWPF:FieldLayoutSettings AllowAddNew="False" AllowClipboardOperations="None" AutoGenerateFields="False" AllowDelete="False" />
       </igWPF:XamDataGrid.FieldLayoutSettings>
@@ -72,8 +83,32 @@
           </igWPF:NumericField>
         </igWPF:FieldLayout>
       </igWPF:XamDataGrid.FieldLayouts>
-    </igWPF:XamDataGrid>
-
-    <Button Grid.Row="3" Command="{Binding CloseDialogCommand}" Content="Zatvori" Margin="10,5,10,5" Grid.ColumnSpan="2"/>
-  </Grid>-->
+    </DataGrid>-->
+    <dxg:GridControl Grid.Row="2" Grid.ColumnSpan="2" ItemsSource="{Binding Predajnice}" AutoGenerateColumns="None">
+      <dxg:GridControl.Columns>
+        <dxg:GridColumn FieldName="MasinaNaziv" Header="Mašina"/>
+        <dxg:GridColumn FieldName="Smena"/>
+        <dxg:GridColumn FieldName="Datum"/>
+        <dxg:GridColumn FieldName="Kolicina" Header="Količina"/>
+        <dxg:GridColumn FieldName="DrugaKl"/>
+        <dxg:GridColumn FieldName="LicePrezimeIme" Header="Radnik"/>
+      </dxg:GridControl.Columns>
+      <dxg:GridControl.View>
+        <dxg:TableView Name="TableView" AllowEditing="False" ShowTotalSummary="True" AutoWidth="True" GroupSummaryDisplayMode="AlignByColumns" PrintAllGroups="False" PrintGroupSummaryDisplayMode="AlignByColumns">
+        </dxg:TableView>
+      </dxg:GridControl.View>
+      <dxg:GridControl.GroupSummary>
+        <dxg:GridSummaryItem FieldName="Kolicina" SummaryType="Sum" DisplayFormat="{}{0:N0}"/>
+        <dxg:GridSummaryItem FieldName="DrugaKl" SummaryType="Sum" DisplayFormat="{}{0:N0}"/>
+      </dxg:GridControl.GroupSummary>
+      <dxg:GridControl.TotalSummary>
+        <dxg:GridSummaryItem FieldName="Kolicina" SummaryType="Sum" DisplayFormat="{}{0:N0}"/>
+        <dxg:GridSummaryItem FieldName="DrugaKl" SummaryType="Sum" DisplayFormat="{}{0:N0}"/>
+      </dxg:GridControl.TotalSummary>
+    </dxg:GridControl>
+    <DockPanel Grid.Row="3" LastChildFill="False">
+      <dx:SimpleButton Name="PrintButton" Content="Štampa" Glyph="{dx:DXImage 'SvgImages/Print/Print.svg'}" DockPanel.Dock="Left" Margin="20,0,0,0" GlyphHeight="25" Click="PrintButton_Click"  IsEnabled="{DXBinding 'Stavke!=null'}"/>
+      <Button Grid.Row="3" Command="{Binding CloseDialogCommand}" Content="Zatvori" Margin="10,5,10,5"  DockPanel.Dock="Right"/>
+    </DockPanel>
+  </Grid>
 </UserControl>

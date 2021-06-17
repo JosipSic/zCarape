@@ -11,6 +11,7 @@ namespace zCarape.Core
         public static string Artikli = "Artikli";
         public static string RadniNalogUnos = "RadniNalogUnos";
         public static string Izvestaji = "Izvestaji";
+        public static string Pivot = "Pivot";
         public static string Predajnica = "Predajnica";
         public static string Velicine = "Velicine";
         public static string ArtikliEdit = "ArtikliEdit";

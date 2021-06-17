@@ -7,42 +7,61 @@
              xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
              xmlns:dxmmv="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
              prism:ViewModelLocator.AutoWireViewModel="True">
+  <UserControl.Resources>
+    <DataTemplate x:Key="PrintPageHeader">
+      <dxe:TextEdit Text="{Binding Content, Mode=OneWay}"
+                    Padding="5,0,0,0"
+                    FontSize="12"
+                    IsPrintingMode="True"
+                    HorizontalContentAlignment="Left"
+                    VerticalContentAlignment="Center"
+                    Width="{Binding Path=UsablePageWidth, Mode=OneWay}"/>
+    </DataTemplate>
+  </UserControl.Resources>
     <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
     <StackPanel Margin="5" Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Stretch">
-      <ComboBox SelectedIndex="{Binding Period}" Width="110" Name="cboPeriod" VerticalAlignment="Center" FontWeight="Bold">
+      <ComboBox  SelectedIndex="{Binding Period}" Width="110" Name="cboPeriod" VerticalAlignment="Center" FontWeight="Bold">
         <ComboBoxItem Content="Svi datumi"/>
         <ComboBoxItem Content="Za period"/>
       </ComboBox>
       <StackPanel  Orientation="Horizontal" Visibility="{DXBinding '@e(cboPeriod).SelectedIndex==0 ? `Hidden` : `Visible`'}">
-        <dxe:DateEdit VerticalAlignment="Center" Margin="5,0" MinWidth="100" EditValue="{Binding DatumOd}" ValidateOnEnterKeyPressed="True">
+        <dxe:DateEdit x:Name="DatumOdDateEdit" VerticalAlignment="Center" Margin="5,0" MinWidth="100" EditValue="{Binding DatumOd}" ValidateOnEnterKeyPressed="True">
           <dxmmv:Interaction.Behaviors>
             <dxmmv:FocusBehavior/>
           </dxmmv:Interaction.Behaviors>
         </dxe:DateEdit>
         <TextBlock VerticalAlignment="Center" Text="do"/>
-        <dxe:DateEdit VerticalAlignment="Center" Margin="5,0" MinWidth="100" EditValue="{Binding DatumDo}" ValidateOnEnterKeyPressed="True"/>
+        <dxe:DateEdit x:Name="DatumDoDateEdit" VerticalAlignment="Center" Margin="5,0" MinWidth="100" EditValue="{Binding DatumDo}" ValidateOnEnterKeyPressed="True"/>
         <dx:SimpleButton Glyph="{dx:DXImage 'SvgImages/Navigation/Backward.svg'}" GlyphHeight="25" Command="{Binding NavigateCommand}" CommandParameter="Nazad" Margin="5,0"/>
         <dx:SimpleButton Glyph="{dx:DXImage 'SvgImages/Navigation/Forward.svg'}" GlyphHeight="25" Command="{Binding NavigateCommand}" CommandParameter="Napred"/>
       </StackPanel>
-      <dx:SimpleButton Name="PrintButton" Content="Štampa" Glyph="{dx:DXImage 'SvgImages/Print/Print.svg'}" HorizontalAlignment="Right" GlyphHeight="25" Click="PrintButton_Click"/>
+      <dx:SimpleButton Name="PrintButton" Content="Štampa" Glyph="{dx:DXImage 'SvgImages/Print/Print.svg'}" HorizontalAlignment="Right" Margin="20,0,0,0" GlyphHeight="25" Click="PrintButton_Click" IsEnabled="{DXBinding 'Stavke!=null'}"/>
     </StackPanel>
-      <dxg:GridControl Grid.Row="1" ItemsSource="{Binding Stavke}" AutoGenerateColumns="AddNew">
+      <dxg:GridControl Name="gridControl" Grid.Row="1" ItemsSource="{Binding Stavke}" AutoGenerateColumns="AddNew">
       <dxg:GridControl.View>
-        <dxg:TableView Name="IzvestajTableView" AllowEditing="False" ShowFixedTotalSummary="True"/>
+        <dxg:TableView Name="IzvestajTableView" AllowEditing="False" ShowTotalSummary="True" GroupSummaryDisplayMode="AlignByColumns" PrintGroupSummaryDisplayMode="AlignByColumns" PrintAllGroups="False" BestFitModeOnSourceChange="Smart">
+          <dxg:TableView.PrintCellStyle>
+            <Style xmlns:dxgt="http://schemas.devexpress.com/winfx/2008/xaml/grid/themekeys"  
+       TargetType="dxe:BaseEdit" BasedOn="{StaticResource {dxgt:TableViewThemeKey ResourceKey=DefaultPrintCellStyle}}">
+              <Setter Property="FontSize" Value="11" />
+            </Style>
+          </dxg:TableView.PrintCellStyle>
+        </dxg:TableView>
       </dxg:GridControl.View>
       <dxg:GridControl.TotalSummary>
-        <dxg:GridSummaryItem  SummaryType="Count" Alignment="Left" />
-        <dxg:GridSummaryItem FieldName="Kolicina" SummaryType="Sum" Alignment="Right" DisplayFormat="Ukupna kolicina: {0:N0}" />
-        <dxg:GridSummaryItem FieldName="DrugaKl" SummaryType="Sum" Alignment="Right" DisplayFormat="II kl: {0:N0}" />
+        <dxg:GridSummaryItem FieldName="Sifra"  SummaryType="Count"  DisplayFormat="Reda:{0}"/>
+        <dxg:GridSummaryItem FieldName="Kolicina" SummaryType="Sum"  DisplayFormat="{}{0:N0}" />
+        <dxg:GridSummaryItem FieldName="DrugaKl" SummaryType="Sum"  DisplayFormat="{}{0:N0}" />
       </dxg:GridControl.TotalSummary>
       <dxg:GridControl.GroupSummary>
-        <dxg:GridSummaryItem FieldName="Kolicina" SummaryType="Sum" Alignment="Right" DisplayFormat="Ukupna kolicina: {0:N0}" />
-        <dxg:GridSummaryItem FieldName="DrugaKl" SummaryType="Sum" Alignment="Right" DisplayFormat="II kl: {0:N0}" />
-      </dxg:GridControl.GroupSummary>
+        <dxg:GridSummaryItem FieldName="Kolicina" SummaryType="Sum" DisplayFormat="{}{0:N0}"/>
+        <dxg:GridSummaryItem FieldName="DrugaKl" SummaryType="Sum"   DisplayFormat="{}{0:N0}"/>
+        <dxg:GridSummaryItem FieldName="Datum" SummaryType="Max" DisplayFormat="d"/>
+     </dxg:GridControl.GroupSummary>
     </dxg:GridControl>
     </Grid>
 </UserControl>

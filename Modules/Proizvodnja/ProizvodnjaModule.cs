@@ -23,6 +23,7 @@ namespace Proizvodnja
             containerRegistry.RegisterForNavigation<MasineURadu, MasineURaduViewModel>();
             containerRegistry.RegisterForNavigation<Masine, MasineViewModel>();
             containerRegistry.RegisterForNavigation<Izvestaji, IzvestajiViewModel>();
+            containerRegistry.RegisterForNavigation<Pivot, PivotViewModel>();
             containerRegistry.RegisterForNavigation<Predajnica, PredajnicaViewModel>();
             containerRegistry.RegisterForNavigation<NoviRN1Artikal, NoviRN1ArtikalViewModel>();
             containerRegistry.RegisterForNavigation<NoviRN2Dezen, NoviRN2DezenViewModel>();
@@ -34,6 +35,7 @@ namespace Proizvodnja
             ViewModelLocationProvider.Register<Proizvodnja.Views.MasineURadu, Proizvodnja.ViewModels.MasineURaduViewModel>();
             ViewModelLocationProvider.Register<Masine, MasineViewModel>();
             ViewModelLocationProvider.Register<Izvestaji, IzvestajiViewModel>();
+            ViewModelLocationProvider.Register<Pivot, PivotViewModel>();
             ViewModelLocationProvider.Register<Predajnica, PredajnicaViewModel>();
             ViewModelLocationProvider.Register<NoviRN2Dezen, NoviRN2DezenViewModel>();
             ViewModelLocationProvider.Register<NoviRN3, NoviRN3ViewModel>();
