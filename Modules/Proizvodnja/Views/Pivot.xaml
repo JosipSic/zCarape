@@ -4,9 +4,14 @@
              xmlns:prism="http://prismlibrary.com/"  
              xmlns:vm="clr-namespace:Proizvodnja.ViewModels"
              xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
-             xmlns:dxpg="http://schemas.devexpress.com/winfx/2008/xaml/pivotgrid" x:Class="Proizvodnja.Views.Pivot"     
+             xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+             xmlns:dxpg="http://schemas.devexpress.com/winfx/2008/xaml/pivotgrid" 
+             xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
+             xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
+             x:Class="Proizvodnja.Views.Pivot"     
              xmlns:dxci="http://schemas.devexpress.com/winfx/2008/xaml/core/internal"
-             prism:ViewModelLocator.AutoWireViewModel="True">
+             xmlns:dxc="http://schemas.devexpress.com/winfx/2008/xaml/charts"
+             prism:ViewModelLocator.AutoWireViewModel="True" Loaded="UserControl_Loaded">
 
   <UserControl.Resources>
     <vm:FieldTemplateSelector x:Key="FieldTemplateSelector" />
@@ -48,11 +53,61 @@
   </UserControl.Resources>
   
   <Grid>
-    <dxpg:PivotGridControl 
-                               DataSource="{Binding DataSource}"
-                               FieldsSource="{Binding Fields }" 
-                               FieldGeneratorTemplateSelector="{StaticResource FieldTemplateSelector}"
-                               GroupsSource="{Binding Groups}" 
-                               GroupGeneratorTemplate="{StaticResource GroupTemplate}"/>
+    <dxlc:LayoutControl AllowItemSizing="True" Orientation="Vertical">
+      <dxlc:LayoutGroup VerticalAlignment="Top">
+        <StackPanel Orientation="Horizontal">
+        <ComboBox  SelectedIndex="{Binding Period}" Width="110" Name="cboPeriod" VerticalAlignment="Center" FontWeight="Bold">
+          <ComboBoxItem Content="Svi datumi"/>
+          <ComboBoxItem Content="Za period"/>
+        </ComboBox>
+        <StackPanel  Orientation="Horizontal" Visibility="{DXBinding '@e(cboPeriod).SelectedIndex==0 ? `Collapsed` : `Visible`'}">
+          <dxe:DateEdit x:Name="DatumOdDateEdit" VerticalAlignment="Center" Margin="5,0" MinWidth="100" EditValue="{Binding DatumOd}" ValidateOnEnterKeyPressed="True" HorizontalAlignment="Left">
+            <dxmvvm:Interaction.Behaviors>
+              <dxmvvm:FocusBehavior/>
+            </dxmvvm:Interaction.Behaviors>
+          </dxe:DateEdit>
+          <TextBlock VerticalAlignment="Center" Text="do"/>
+          <dxe:DateEdit x:Name="DatumDoDateEdit" VerticalAlignment="Center" Margin="5,0" MinWidth="100" EditValue="{Binding DatumDo}" ValidateOnEnterKeyPressed="True"/>
+          <dx:SimpleButton Glyph="{dx:DXImage 'SvgImages/Navigation/Backward.svg'}" GlyphHeight="25" Command="{Binding NavigateCommand}" CommandParameter="Nazad" Margin="5,0"/>
+          <dx:SimpleButton Glyph="{dx:DXImage 'SvgImages/Navigation/Forward.svg'}" GlyphHeight="25" Command="{Binding NavigateCommand}" CommandParameter="Napred"/>
+        </StackPanel>
+        <dxe:CheckEdit Name="chkDijagram" Content="Dijagram" Margin="20,0,5,0" HorizontalContentAlignment="Left"/>
+        <StackPanel Orientation="Horizontal" Visibility="{Binding ElementName=chartLayoutGroup, Path=Visibility}">
+          <dxe:CheckEdit Name="chkSamoIzborZaDijagram" Content="Samo selektovana polja" />
+        </StackPanel>
+        <dx:SimpleButton Name="PrintButton" Content="Štampa" Glyph="{dx:DXImage 'SvgImages/Print/Print.svg'}" HorizontalAlignment="Right" Margin="20,0,0,0" GlyphHeight="25" />
+        </StackPanel>
+      </dxlc:LayoutGroup>
+      <dxlc:LayoutGroup >
+        <dxpg:PivotGridControl Name="PivotGrid"
+                                   DataSource="{Binding DataSource}"
+                                   FieldsSource="{Binding Fields }" 
+                                   FieldGeneratorTemplateSelector="{StaticResource FieldTemplateSelector}"
+                                   GroupsSource="{Binding Groups}" 
+                                   GroupGeneratorTemplate="{StaticResource GroupTemplate}" ChartSelectionOnly="{Binding ElementName=chkSamoIzborZaDijagram, Path=IsChecked}"
+                             ChartFieldValuesProvideMode="DisplayText"
+                             />
+      </dxlc:LayoutGroup>
+
+      <dxlc:LayoutGroup Name="chartLayoutGroup" dxlc:LayoutControl.AllowVerticalSizing="True" dxlc:LayoutControl.AllowHorizontalSizing="True" Visibility="{Binding ElementName=chkDijagram, Path=IsChecked, Mode=OneWay, Converter={dx:BooleanToVisibilityConverter}}">
+        <dxc:ChartControl DataSource="{Binding ElementName=PivotGrid, Path=ChartDataSource}">
+        <dxc:ChartControl.Diagram>
+          <dxc:XYDiagram2D SeriesDataMember="Series">
+            <dxc:XYDiagram2D.SeriesTemplate>
+                <dxc:BarSideBySideSeries2D ArgumentDataMember="Arguments" 
+                                         ValueDataMember="Values" ShowInLegend="True" CrosshairContentShowMode="Label" ToolTipEnabled="True"/>
+              </dxc:XYDiagram2D.SeriesTemplate>
+          </dxc:XYDiagram2D>
+        </dxc:ChartControl.Diagram>
+
+          <dxc:ChartControl.CrosshairOptions>
+            <dxc:CrosshairOptions ShowArgumentLine="True" />
+          </dxc:ChartControl.CrosshairOptions>
+          <dxc:ChartControl.Legend>
+            <dxc:Legend ReverseItems="False" MarkerMode="CheckBox"/>
+          </dxc:ChartControl.Legend>
+        </dxc:ChartControl>
+      </dxlc:LayoutGroup>
+    </dxlc:LayoutControl>
   </Grid>
 </UserControl>

@@ -28,7 +28,7 @@
         <ComboBoxItem Content="Svi datumi"/>
         <ComboBoxItem Content="Za period"/>
       </ComboBox>
-      <StackPanel  Orientation="Horizontal" Visibility="{DXBinding '@e(cboPeriod).SelectedIndex==0 ? `Hidden` : `Visible`'}">
+      <StackPanel  Orientation="Horizontal" Visibility="{DXBinding '@e(cboPeriod).SelectedIndex==0 ? `Collapsed` : `Visible`'}">
         <dxe:DateEdit x:Name="DatumOdDateEdit" VerticalAlignment="Center" Margin="5,0" MinWidth="100" EditValue="{Binding DatumOd}" ValidateOnEnterKeyPressed="True">
           <dxmmv:Interaction.Behaviors>
             <dxmmv:FocusBehavior/>

@@ -1,5 +1,6 @@
 ﻿using Prism.Commands;
 using Prism.Mvvm;
+using Prism.Regions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,7 @@ using zCarape.Services.Interfaces;
 
 namespace Proizvodnja.ViewModels
 {
-    public class IzvestajiViewModel : BindableBase
+    public class IzvestajiViewModel : BindableBase, IRegionMemberLifetime
     {
         enum RasponEnum
         {
@@ -18,6 +19,7 @@ namespace Proizvodnja.ViewModels
 
         #region Fields
         private readonly IDbService _dbService;
+        private bool _programskaPromenaDatuma = false;
         #endregion
 
         #region Properies
@@ -52,6 +54,9 @@ namespace Proizvodnja.ViewModels
             get { return _period; }
             set { SetProperty(ref _period, value); KreirajListu(); }
         }
+
+        public bool KeepAlive => false;
+
         #endregion
 
         #region Ctor
@@ -65,6 +70,7 @@ namespace Proizvodnja.ViewModels
         private DelegateCommand<string> _navigateCommand;
         public DelegateCommand<string> NavigateCommand =>
             _navigateCommand ?? (_navigateCommand = new DelegateCommand<string>(ExecuteNavigateCommand));
+
 
         void ExecuteNavigateCommand(string smer)
         {
@@ -83,6 +89,8 @@ namespace Proizvodnja.ViewModels
         #region Methods
         private void KreirajListu()
         {
+            if (_programskaPromenaDatuma)
+                return;
 
             DateTime? parOd=null;
             DateTime? parDo=null;
@@ -104,6 +112,7 @@ namespace Proizvodnja.ViewModels
 
         private void PomeriPeriod(int move = 1)
         {
+            _programskaPromenaDatuma = true;
             if (DatumOd == null && DatumDo == null)
             {
                 DateTime postaviMesec = (move < 0) ? DateTime.Now.Date.AddMonths(move) : DateTime.Now;
@@ -137,6 +146,7 @@ namespace Proizvodnja.ViewModels
                     DatumDo = DatumDo.Value.AddDays(razlika);
                 }
             }
+            _programskaPromenaDatuma = false;
             KreirajListu();
         }
 
