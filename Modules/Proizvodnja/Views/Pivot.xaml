@@ -49,8 +49,13 @@
         </dxpg:PivotGridGroup>
       </ContentControl>
     </DataTemplate>
+    <Style x:Key="seriesStyle" TargetType="{x:Type dxc:XYSeries2D}">
+        <Setter Property="ArgumentDataMember" Value="Arguments" />
+        <Setter Property="ValueDataMember" Value="Values" />
+        <Setter Property="CrosshairLabelPattern" Value="{}{S}: {V}" />
+    </Style>
 
-  </UserControl.Resources>
+    </UserControl.Resources>
   
   <Grid>
     <dxlc:LayoutControl AllowItemSizing="True" Orientation="Vertical">
@@ -72,9 +77,66 @@
           <dx:SimpleButton Glyph="{dx:DXImage 'SvgImages/Navigation/Forward.svg'}" GlyphHeight="25" Command="{Binding NavigateCommand}" CommandParameter="Napred"/>
         </StackPanel>
         <dxe:CheckEdit Name="chkDijagram" Content="Dijagram" Margin="20,0,5,0" HorizontalContentAlignment="Left"/>
-        <StackPanel Orientation="Horizontal" Visibility="{Binding ElementName=chartLayoutGroup, Path=Visibility}">
-          <dxe:CheckEdit Name="chkSamoIzborZaDijagram" Content="Samo selektovana polja" />
+        <Border BorderBrush="DarkSeaGreen" BorderThickness="1" Visibility="{Binding ElementName=chartLayoutGroup, Path=Visibility}">
+        <StackPanel Orientation="Horizontal" Margin="5,0">
+            <dxe:ComboBoxEdit Name="cboRedKolona" SelectedIndex="0" VerticalAlignment="Center" IsTextEditable="False">
+                <dxe:ComboBoxEditItem Content="Po kolonama"/>
+                <dxe:ComboBoxEditItem Content="PoRedovima"/>
+            </dxe:ComboBoxEdit>
+            <dxe:ComboBoxEdit Name="cbChartType"
+                                Grid.Column="1"
+                                SelectedIndex="0"
+                                DisplayMember="DisplayName"
+                                ValueMember="Content"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Stretch"
+                                IsTextEditable="False"
+                                Margin="5,0"
+                                TabIndex="1">
+                <!--#region Chart Series-->
+                <vm:ValueSelectorItem DisplayName="Stubovi">
+                    <vm:ValueSelectorItem.Content>
+                        <dxc:BarSideBySideSeries2D Style="{StaticResource seriesStyle}"
+                                                    LabelsVisibility="{Binding Source={x:Reference ceShowPointsLabels}, Path=IsChecked}"
+                                                   ToolTipEnabled="True" ToolTipPointPattern=" {S}: {V:F2} ({A}) ">
+                            <dxc:BarSideBySideSeries2D.Model>
+                                <dxc:FlatGlassBar2DModel />
+                            </dxc:BarSideBySideSeries2D.Model>
+                        </dxc:BarSideBySideSeries2D>
+                    </vm:ValueSelectorItem.Content>
+                </vm:ValueSelectorItem>
+                <vm:ValueSelectorItem DisplayName="Udeo u celom">
+                    <vm:ValueSelectorItem.Content>
+                        <dxc:BarSideBySideFullStackedSeries2D Style="{StaticResource seriesStyle}"
+                                                    LabelsVisibility="{Binding Source={x:Reference ceShowPointsLabels}, Path=IsChecked}"
+                                                    ArgumentDataMember="Arguments" 
+                                                    ValueDataMember="Values">
+                            <dxc:BarSideBySideFullStackedSeries2D.Model>
+                                <dxc:FlatGlassBar2DModel /> 
+                            </dxc:BarSideBySideFullStackedSeries2D.Model>
+                        </dxc:BarSideBySideFullStackedSeries2D>
+                    </vm:ValueSelectorItem.Content>
+                </vm:ValueSelectorItem>
+                <vm:ValueSelectorItem DisplayName="Povezane linije">
+                    <vm:ValueSelectorItem.Content>
+                        <dxc:LineSeries2D LabelsVisibility="{Binding Source={x:Reference ceShowPointsLabels}, Path=IsChecked}"
+                                            Style="{StaticResource seriesStyle}"
+                                            MarkerVisible="True">
+                            <dxc:LineSeries2D.MarkerModel>
+                                <dxc:CircleMarker2DModel />
+                            </dxc:LineSeries2D.MarkerModel>
+                        </dxc:LineSeries2D>
+                    </vm:ValueSelectorItem.Content>
+                </vm:ValueSelectorItem>
+                <!--#endregion-->
+            </dxe:ComboBoxEdit>
+            <dxe:ComboBoxEdit Name="cbIzborZaDijagram" IsTextEditable="True" SelectedIndex="0" Margin="5,0,0,0" VerticalAlignment="Center">
+                <dxe:ComboBoxEditItem Content="Cela tabela"/>
+                <dxe:ComboBoxEditItem Content="Selektovani deo"/>
+            </dxe:ComboBoxEdit>
+            <dxe:CheckEdit Name="ceShowPointsLabels" IsChecked="True" Content="Prikazi labele" Margin="5,0,0,0" TabIndex="2" />
         </StackPanel>
+        </Border>
         <dx:SimpleButton Name="PrintButton" Content="Štampa" Glyph="{dx:DXImage 'SvgImages/Print/Print.svg'}" HorizontalAlignment="Right" Margin="20,0,0,0" GlyphHeight="25" />
         </StackPanel>
       </dxlc:LayoutGroup>
@@ -83,28 +145,44 @@
                                    DataSource="{Binding DataSource}"
                                    FieldsSource="{Binding Fields }" 
                                    FieldGeneratorTemplateSelector="{StaticResource FieldTemplateSelector}"
+                                   FieldCellTemplateSelector="{StaticResource FieldTemplateSelector}"
                                    GroupsSource="{Binding Groups}" 
-                                   GroupGeneratorTemplate="{StaticResource GroupTemplate}" ChartSelectionOnly="{Binding ElementName=chkSamoIzborZaDijagram, Path=IsChecked}"
-                             ChartFieldValuesProvideMode="DisplayText"
+                                   GroupGeneratorTemplate="{StaticResource GroupTemplate}" 
+                                   ChartMaxSeriesCount="0"
+                                   ChartSelectionOnly="{DXBinding '@e(cbIzborZaDijagram).SelectedIndex==1'}"
+                                   ChartFieldValuesProvideMode="DisplayText"
+                                   ChartProvideDataByColumns="{DXBinding '@e(cboRedKolona).SelectedIndex==1'}"
                              />
       </dxlc:LayoutGroup>
 
       <dxlc:LayoutGroup Name="chartLayoutGroup" dxlc:LayoutControl.AllowVerticalSizing="True" dxlc:LayoutControl.AllowHorizontalSizing="True" Visibility="{Binding ElementName=chkDijagram, Path=IsChecked, Mode=OneWay, Converter={dx:BooleanToVisibilityConverter}}">
-        <dxc:ChartControl DataSource="{Binding ElementName=PivotGrid, Path=ChartDataSource}">
+        <dxc:ChartControl DataSource="{Binding ElementName=PivotGrid, Path=ChartDataSource}" CrosshairEnabled="True">
         <dxc:ChartControl.Diagram>
-          <dxc:XYDiagram2D SeriesDataMember="Series">
-            <dxc:XYDiagram2D.SeriesTemplate>
-                <dxc:BarSideBySideSeries2D ArgumentDataMember="Arguments" 
-                                         ValueDataMember="Values" ShowInLegend="True" CrosshairContentShowMode="Label" ToolTipEnabled="True"/>
-              </dxc:XYDiagram2D.SeriesTemplate>
-          </dxc:XYDiagram2D>
+            <dxc:XYDiagram2D SeriesDataMember="Series" SeriesTemplate="{Binding ElementName=cbChartType, Path=EditValue}">
+            <!--<dxc:XYDiagram2D.SeriesTemplate>
+                                <dxc:BarSideBySideSeries2D ArgumentDataMember="Arguments" 
+                                           ValueDataMember="Values" 
+                                           ShowInLegend="True" 
+                                           CrosshairContentShowMode="Label" 
+                                           ToolTipEnabled="False"
+                                           LabelsVisibility="True" >
+                                </dxc:BarSideBySideSeries2D>
+              </dxc:XYDiagram2D.SeriesTemplate>-->
+                <dxc:XYDiagram2D.AxisX>
+                    <dxc:AxisX2D>
+                        <dxc:AxisX2D.Label>
+                             <dxc:AxisLabel  Staggered="True" />
+                        </dxc:AxisX2D.Label>
+                    </dxc:AxisX2D>
+                </dxc:XYDiagram2D.AxisX>
+            </dxc:XYDiagram2D>
         </dxc:ChartControl.Diagram>
 
           <dxc:ChartControl.CrosshairOptions>
-            <dxc:CrosshairOptions ShowArgumentLine="True" />
+            <dxc:CrosshairOptions ShowArgumentLine="True" ShowValueLabels="False" ShowGroupHeaders="True"  />
           </dxc:ChartControl.CrosshairOptions>
           <dxc:ChartControl.Legend>
-            <dxc:Legend ReverseItems="False" MarkerMode="CheckBox"/>
+            <dxc:Legend ReverseItems="False" MarkerMode="Marker"/>
           </dxc:ChartControl.Legend>
         </dxc:ChartControl>
       </dxlc:LayoutGroup>
