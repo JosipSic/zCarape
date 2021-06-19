@@ -155,13 +155,13 @@ namespace Proizvodnja.ViewModels
                 where z.NalogURadu.RadniNalogID == radniNalogID
                 select m.MasinaNaziv;
 
-            if (masineSaNalogom.Count()==0)
+            if (masineSaNalogom.Count() == 0)
             {
                 return;
             }
 
-            string poruka = "Da li ste sigurni?" ;
-            if (masineSaNalogom.Count()>1)
+            string poruka = "Da li ste sigurni?";
+            if (masineSaNalogom.Count() > 1)
             {
                 string porukaPref = "Izabrani nalog je aktivan na mašinama ";
                 foreach (var item in masineSaNalogom)
@@ -172,8 +172,8 @@ namespace Proizvodnja.ViewModels
                 poruka = porukaPref + poruka;
             }
 
-            if (MessageBox.Show(poruka,"Zaključenje radnog naloga br."+radniNalogID.ToString(),MessageBoxButton.YesNo,MessageBoxImage.Question,MessageBoxResult.No)
-                ==MessageBoxResult.No)
+            if (MessageBox.Show(poruka, "Zaključenje radnog naloga br." + radniNalogID.ToString(), MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No)
+                == MessageBoxResult.No)
             {
                 return;
             }
@@ -205,7 +205,7 @@ namespace Proizvodnja.ViewModels
 
         // PretnodniDanCommand
         private DelegateCommand<Zadatak> _prethodniDanComman;
-        public DelegateCommand<Zadatak> PrethodniDanCommand=>
+        public DelegateCommand<Zadatak> PrethodniDanCommand =>
             _prethodniDanComman ?? (_prethodniDanComman = new DelegateCommand<Zadatak>(ExecutePrethodniDanCommand));
 
         void ExecutePrethodniDanCommand(Zadatak zadatak)
@@ -221,7 +221,7 @@ namespace Proizvodnja.ViewModels
 
         void ExecuteNaredniDanCommand(Zadatak zadatak)
         {
-            if (zadatak.DatumPredajnice==DateTime.Now.Date)
+            if (zadatak.DatumPredajnice == DateTime.Now.Date)
             {
                 return;
             }
@@ -438,14 +438,14 @@ namespace Proizvodnja.ViewModels
             }
 
             // Ako je zapis nov (nije snimljen), a izabrano je samo lice bez bez finansijskih iznosa onda ne snimam
-            if (predajnicaID==0 && kolicina==0 && drugaKl==0)
+            if (predajnicaID == 0 && kolicina == 0 && drugaKl == 0)
             {
                 return;
             }
 
             // Ako nije izabrano lice ne snimam. Ne bi trebalo nikad da se desi 
             // posto unos kolicina u formi za unos nije omogucen ukoliko nije izabran radnik
-            if (liceID==0)
+            if (liceID == 0)
             {
                 MessageBox.Show("Unos nije snimljen u bazu. Nije moguce snimiti zapis bez izabranog radnika", "Problem", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 return;
@@ -487,7 +487,7 @@ namespace Proizvodnja.ViewModels
             }
 
             long azuriranaPredajnicaID = _dbService.InsertOrUpdatePredajnica(predajnica, kolona);
-            if (azuriranaPredajnicaID==0)
+            if (azuriranaPredajnicaID == 0)
             {
                 MessageBox.Show("Baza nije azurirana.", "Problem", MessageBoxButton.OK, MessageBoxImage.Error);
             }
@@ -521,9 +521,9 @@ namespace Proizvodnja.ViewModels
             nalogURadu.Uradjeno = _dbService.GetPredatoByRadniNalog(nalogURadu.RadniNalogID);
         }
 
-        private void FormirajIstoriju(MasinaURadu masinaURadu=null, Kretanje kretanje=Kretanje.Nazad)
+        private void FormirajIstoriju(MasinaURadu masinaURadu = null, Kretanje kretanje = Kretanje.Nazad)
         {
-            if (masinaURadu==null)
+            if (masinaURadu == null)
             {
                 foreach (MasinaURadu item in MasineURadu)
                 {
@@ -540,7 +540,7 @@ namespace Proizvodnja.ViewModels
         {
             long trenutniRnID = masinaURadu.Istorija == null ? 0 : masinaURadu.Istorija.RadniNalogID;
             var istorijaTemp = _dbService.GetNextIstorija(masinaURadu.MasinaID, trenutniRnID, kretanje);
-            if (istorijaTemp!=null)
+            if (istorijaTemp != null)
             {
                 masinaURadu.Istorija = istorijaTemp;
             }
@@ -552,18 +552,48 @@ namespace Proizvodnja.ViewModels
 
             // Zadatak koji je istog statusa i iste hitnosti a ima redosled koji je najveci, ali manji ili jednak od zadatak2.redosled
             // ako je isti redosled onda gleda najveci RadniNalogID
-            Zadatak zadatak1 = (from m in MasineURadu
+            var zadaciIspred = (from m in MasineURadu
                                 where m.MasinaID == zadatak2.MasinaID
                                 from z in m.Zadaci
-                                where z.NalogURadu.StatusNaloga == zadatak2.NalogURadu.StatusNaloga 
+                                where z.NalogURadu.StatusNaloga == zadatak2.NalogURadu.StatusNaloga
                                 && z.Hitno == zadatak2.Hitno
-                                && z.Redosled <= zadatak2.Redosled 
-                                && z.ID!=zadatak2.ID
-                                orderby z.Redosled descending
-                                select z).FirstOrDefault();
-            if (zadatak1 == null) return;
+                                && (z.Redosled < zadatak2.Redosled || (z.Redosled==zadatak2.Redosled && z.ID<zadatak2.ID))
+                               && z.ID != zadatak2.ID
+                               orderby z.Redosled descending
+                               select z).ToList();
+            if (zadaciIspred == null || zadaciIspred.Count == 0)
+                return;
 
-            _dbService.SetRedosledAngazovaneMasine(zadatak2.ID, zadatak1.Redosled - 1);
+            int redosledPrethodnogZadatka = zadaciIspred.First().Redosled;
+            int zahtevaniRedosled = redosledPrethodnogZadatka - 1;
+            _dbService.SetRedosledAngazovaneMasine(zadatak2.ID, redosledPrethodnogZadatka - 1);
+
+            // Ako ima vise zadataka promeravam redosled svih prethodnih
+            if (zadaciIspred.Count > 1)
+            {
+                for (int i = 1; i < zadaciIspred.Count; i++)
+                {
+                    if (zadaciIspred[i].Redosled >= zahtevaniRedosled)
+                    {
+                        zahtevaniRedosled--;
+                        _dbService.SetRedosledAngazovaneMasine(zadaciIspred[i].ID, zahtevaniRedosled);
+                    }
+                }
+            }
+
+
+
+            //Zadatak zadatak1 = (from m in MasineURadu
+            //                    where m.MasinaID == zadatak2.MasinaID
+            //                    from z in m.Zadaci
+            //                    where z.NalogURadu.StatusNaloga == zadatak2.NalogURadu.StatusNaloga 
+            //                    && z.Hitno == zadatak2.Hitno
+            //                    && z.Redosled <= zadatak2.Redosled 
+            //                    && z.ID!=zadatak2.ID
+            //                    orderby z.Redosled descending
+            //                    select z).FirstOrDefault();
+            //if (zadatak1 == null) return;
+
             OsveziFormu();
         }
 

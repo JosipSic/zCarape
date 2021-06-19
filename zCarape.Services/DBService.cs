@@ -589,12 +589,19 @@ namespace zCarape.Services
 
             cmd.CommandText = "INSERT INTO masine (naziv,opis,slika,aktivan) VALUES (@naziv,@opis,@slika,@aktivan)";
 
-            if (cmd.ExecuteNonQuery() == 1)
-                return con.LastInsertRowId;
-            else
-                return masina.ID;
+            try
+            {
+                if (cmd.ExecuteNonQuery() == 1)
+                    return con.LastInsertRowId;
+                else
+                    return masina.ID;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(String.Format($"nMessage: {ex.Message}"));
+                return 0;
+            }
         }
-
 
         public bool DeleteMasina(long id)
         {
@@ -741,7 +748,6 @@ namespace zCarape.Services
                 return 0;
 
         }
-
 
         public bool MasinaImaZavisneZapise(long id)
         {
