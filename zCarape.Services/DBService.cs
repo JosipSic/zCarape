@@ -745,8 +745,14 @@ namespace zCarape.Services
 
         public bool MasinaImaZavisneZapise(long id)
         {
-            // TODO
-            return false;
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+            using var cmd = new SQLiteCommand(con);
+            cmd.CommandText = "SELECT ID FROM AngazovaneMasine WHERE MasinaId=@masinaId LIMIT 1";
+            cmd.Parameters.AddWithValue("@masinaId", id);
+            object odgovor = cmd.ExecuteScalar();
+
+            return odgovor!=null;
         }
 
         #endregion // Masine

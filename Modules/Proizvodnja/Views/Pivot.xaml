@@ -137,7 +137,7 @@
             <dxe:CheckEdit Name="ceShowPointsLabels" IsChecked="True" Content="Prikazi labele" Margin="5,0,0,0" TabIndex="2" />
         </StackPanel>
         </Border>
-        <dx:SimpleButton Name="PrintButton" Content="Štampa" Glyph="{dx:DXImage 'SvgImages/Print/Print.svg'}" HorizontalAlignment="Right" Margin="20,0,0,0" GlyphHeight="25" />
+        <dx:SimpleButton Name="PrintButton" Content="Štampa" Glyph="{dx:DXImage 'SvgImages/Print/Print.svg'}" HorizontalAlignment="Right" Margin="20,0,0,0" GlyphHeight="25" Click="PrintButton_Click"/>
         </StackPanel>
       </dxlc:LayoutGroup>
       <dxlc:LayoutGroup >
@@ -151,12 +151,12 @@
                                    ChartMaxSeriesCount="0"
                                    ChartSelectionOnly="{DXBinding '@e(cbIzborZaDijagram).SelectedIndex==1'}"
                                    ChartFieldValuesProvideMode="DisplayText"
-                                   ChartProvideDataByColumns="{DXBinding '@e(cboRedKolona).SelectedIndex==1'}"
+                                   ChartProvideDataByColumns="{DXBinding '@e(cboRedKolona).SelectedIndex==1'}" PrintUnusedFilterFields="False"
                              />
       </dxlc:LayoutGroup>
 
       <dxlc:LayoutGroup Name="chartLayoutGroup" dxlc:LayoutControl.AllowVerticalSizing="True" dxlc:LayoutControl.AllowHorizontalSizing="True" Visibility="{Binding ElementName=chkDijagram, Path=IsChecked, Mode=OneWay, Converter={dx:BooleanToVisibilityConverter}}">
-        <dxc:ChartControl DataSource="{Binding ElementName=PivotGrid, Path=ChartDataSource}" CrosshairEnabled="True">
+        <dxc:ChartControl DataSource="{Binding ElementName=PivotGrid, Path=ChartDataSource}" CrosshairEnabled="True" >
         <dxc:ChartControl.Diagram>
             <dxc:XYDiagram2D SeriesDataMember="Series" SeriesTemplate="{Binding ElementName=cbChartType, Path=EditValue}">
             <!--<dxc:XYDiagram2D.SeriesTemplate>
@@ -179,7 +179,7 @@
         </dxc:ChartControl.Diagram>
 
           <dxc:ChartControl.CrosshairOptions>
-            <dxc:CrosshairOptions ShowArgumentLine="True" ShowValueLabels="False" ShowGroupHeaders="True"  />
+            <dxc:CrosshairOptions ShowArgumentLine="True" ShowValueLabels="False" ShowGroupHeaders="True" ShowOnlyInFocusedPane="True" ContentShowMode="Label" />
           </dxc:ChartControl.CrosshairOptions>
           <dxc:ChartControl.Legend>
             <dxc:Legend ReverseItems="False" MarkerMode="Marker"/>

@@ -1,4 +1,7 @@
-﻿using System.Windows.Controls;
+﻿using DevExpress.Xpf.Charts;
+using DevExpress.Xpf.Printing;
+using System.Drawing;
+using System.Windows.Controls;
 
 namespace Proizvodnja.Views
 {
@@ -16,5 +19,22 @@ namespace Proizvodnja.Views
         {
             PivotGrid.BestFit();
         }
+
+        private void PrintButton_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            string DocumentName = "Pivot izvestaj";
+            //string Title = "Pivot tabela";
+
+            //PivotGrid.ShowPrintPreview(this, DocumentName, Title);
+
+
+            var link = new PrintableControlLink(PivotGrid, DocumentName);
+            link.PaperKind = System.Drawing.Printing.PaperKind.A4;
+            link.Margins = new System.Drawing.Printing.Margins(45, 35, 30, 30);
+            link.Landscape = true;
+            PrintHelper.ShowRibbonPrintPreview(this, link);
+
+        }
+
     }
 }

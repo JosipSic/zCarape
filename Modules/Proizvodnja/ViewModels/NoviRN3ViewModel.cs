@@ -350,7 +350,7 @@ namespace Proizvodnja.ViewModels
             foreach (Masina item in masine)
             {
                 Masine.Add(
-                         new MasinaZaIzbor() { ID=item.ID, Naziv=item.Naziv}
+                         new MasinaZaIzbor() { ID=item.ID, Naziv=item.Naziv, Opis=item.Opis, Aktivan=item.Aktivan}
                           );
             }
 
@@ -365,6 +365,17 @@ namespace Proizvodnja.ViewModels
                     {
                         m.Izbor = true;
                     }
+                }
+            }
+
+            // Uklanjam neaktivne masine
+            List<long> spisakZaUklanjanje = Masine.Where(m => m.Aktivan == false && m.Izbor == false).Select(m => m.ID).ToList();
+            foreach (var itemID in spisakZaUklanjanje)
+            {
+                var masinaZaUklanjanje = Masine.FirstOrDefault(m => m.ID == itemID);
+                if (masinaZaUklanjanje!=null)
+                {
+                    Masine.Remove(masinaZaUklanjanje);
                 }
             }
         }
@@ -449,6 +460,8 @@ namespace Proizvodnja.ViewModels
     {
         public long ID { get; set; }
         public string Naziv { get; set; }
+        public string Opis { get; set; }
+        public bool Aktivan { get; set; }
         public bool Izbor { get; set; }
     }
 }

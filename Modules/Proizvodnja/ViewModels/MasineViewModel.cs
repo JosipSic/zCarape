@@ -1,58 +1,25 @@
-﻿using Prism.Commands;
+﻿using DevExpress.Mvvm.DataAnnotations;
+using DevExpress.Xpf.Core;
+using Prism.Commands;
 using Prism.Mvvm;
+using Prism.Regions;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
+using System.Windows.Input;
 using zCarape.Core.Models;
 using zCarape.Services.Interfaces;
 
 namespace Proizvodnja.ViewModels
 {
-    public class MasineViewModel : BindableBase
+    public class MasineViewModel : BindableBase, IRegionMemberLifetime
     {
-        #region Fields
-
         private readonly IDbService _dbService;
-        private long id = 0;
-
-        #endregion //Fields
 
         #region Properties
-
-        private string _naziv;
-        public string Naziv
-        {
-            get { return _naziv; }
-            set {
-                bool promenjen = _naziv != value;
-                SetProperty(ref _naziv, value);
-                if (promenjen) PromenjenJeNaziv();
-            }
-        }
-
-        private string _opis;
-        public string Opis
-        {
-            get { return _opis; }
-            set { SetProperty(ref _opis, value); }
-        }
-
-        private string _slika;
-        public string Slika
-        {
-            get { return _slika; }
-            set { SetProperty(ref _slika, value); }
-        }
-
-        private bool _aktivan;
-        public bool Aktivan
-        {
-            get { return _aktivan; }
-            set { SetProperty(ref _aktivan, value); }
-        }
-
+        // Masine
         private ObservableCollection<Masina> _masine;
         public ObservableCollection<Masina> Masine
         {
@@ -60,154 +27,106 @@ namespace Proizvodnja.ViewModels
             set { SetProperty(ref _masine, value); }
         }
 
-        #endregion //Properties
-
-        #region Cmd
-
-        // Snimi
-        private DelegateCommand _snimiCommand;
-        public DelegateCommand SnimiCommand =>
-            _snimiCommand ?? (_snimiCommand = new DelegateCommand(ExecuteSnimiCommand));
-
-        void ExecuteSnimiCommand()
+        // SelectedMasina
+        private Masina _selectedMasina;
+        public Masina SelectedMasina
         {
-            if (String.IsNullOrWhiteSpace(Naziv)) return;
-
-            long odgovor = _dbService.InsertOrUpdateMasina(new Masina() { ID = this.id, Naziv=this.Naziv, Opis = this.Opis, Slika=this.Slika, Aktivan=this.Aktivan });
-            if (odgovor == 0)
-            {
-
-            }
-            else
-            {
-                AzurirajListu(odgovor);
-                BlankoForma();
-            }
+            get { return _selectedMasina; }
+            set { SetProperty(ref _selectedMasina, value); }
         }
 
-        // Izbrisi
-        private DelegateCommand _izbrisiCommand;
-        public DelegateCommand IzbrisiCommand =>
-            _izbrisiCommand ?? (_izbrisiCommand = new DelegateCommand(ExecuteIzbrisiCommand));
+        // KeepAlive
+        public bool KeepAlive => false;
+        #endregion
 
-        void ExecuteIzbrisiCommand()
+        #region Ctor
+        public MasineViewModel(IDbService dbService)
         {
-            if (this.id == 0) return;
+            _dbService = dbService;
+            FormirajSpisakMasina();
+        }
+        public MasineViewModel()
+        {
 
-            if (_dbService.MasinaImaZavisneZapise(id: this.id))
+        }
+        #endregion
+
+        #region Command
+        private DelegateCommand<DevExpress.Xpf.Grid.GridRowValidationEventArgs> _validateRowCommand;
+        public DelegateCommand<DevExpress.Xpf.Grid.GridRowValidationEventArgs> ValidateRowCommand =>
+            _validateRowCommand ?? (_validateRowCommand = new DelegateCommand<DevExpress.Xpf.Grid.GridRowValidationEventArgs>(ValidateRow));
+
+        public void ValidateRow(DevExpress.Xpf.Grid.GridRowValidationEventArgs e)
+        {
+            if (SelectedMasina == null)
+                return;
+
+            string greska = "";
+
+            if (string.IsNullOrWhiteSpace(SelectedMasina.Naziv))
             {
-                MessageBox.Show("Postoje zavisni zapisi. Ukoliko se mašina više ne koristi obeležite da je neaktivna","Nije dozvoljeno brisanje", MessageBoxButton.OK, MessageBoxImage.Information);
+                greska += "Niste uneli oznaku mašine.";
+            }
+
+            if (!string.IsNullOrEmpty(greska))
+            {
+                e.IsValid = false;
+                e.ErrorContent = greska;
                 return;
             }
 
-            if (_dbService.DeleteMasina(id: this.id))
+            if (SelectedMasina.ID==0)
             {
-                Masina izbrisanaMasina = Masine.First((m) => m.ID == this.id);
-                if (izbrisanaMasina != null)
-                {
-                    this.Masine.Remove(izbrisanaMasina);
-                    this.BlankoForma();
-                }
+                SelectedMasina.Aktivan = true;
+            }
+
+            long odgovor = _dbService.InsertOrUpdateMasina(SelectedMasina);
+
+            if (odgovor==0)
+            {
+                e.IsValid = false;
+                e.ErrorContent = "ZapisNijeSnimljen";
+                return;
+            }
+            else if (SelectedMasina.ID==0 && SelectedMasina.ID!=odgovor)
+            {
+                SelectedMasina.ID = odgovor;
             }
         }
 
-        // Odustani
-        private DelegateCommand _odustaniCommand;
-
-        public DelegateCommand OdustaniCommand =>
-            _odustaniCommand ?? (_odustaniCommand = new DelegateCommand(ExecuteOdustaniCommand));
-
-
-        void ExecuteOdustaniCommand()
+        private DelegateCommand izbrisiMasinuCommand;
+        public ICommand IzbrisiMasinuCommand => izbrisiMasinuCommand ??= new DelegateCommand(IzbrisiMasinu);
+        public void IzbrisiMasinu()
         {
-            this.BlankoForma();
-        }
+            if (SelectedMasina == null)
+                return;
+            
+            long idZaBrisanje = SelectedMasina.ID;
 
-        #endregion //Cmd
+            if (idZaBrisanje == 0)
+                return;
+
+            if (_dbService.MasinaImaZavisneZapise(id: idZaBrisanje))
+            {
+                DXMessageBox.Show("Postoje zavisni zapisi. Ukoliko se mašina više ne koristi obeležite da je neaktivna", "Nije dozvoljeno brisanje", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            if (_dbService.DeleteMasina(id: idZaBrisanje))
+            {
+               this.Masine.Remove(SelectedMasina);
+            }
+        }
+        #endregion
 
         #region Methods
-
-        private void BlankoForma()
-        {
-            this.id = 0;
-            NoviUnosPriprema();
-        }
-
-        private void NoviUnosPriprema()
-        {
-            this.Naziv = this.Opis = this.Slika = string.Empty;
-            this.Aktivan = true;
-
-        }
-
-        private bool PromenjenJeNaziv()
-        {
-            if (string.IsNullOrWhiteSpace(this.Naziv))
-            {
-                NoviUnosPriprema();
-                return true;
-            }
-
-            Masina masina = _dbService.GetByNazivMasina(this.Naziv);
-            if (masina == null)
-            {
-                // Ne postoji
-            }
-            else
-            {
-                // Rezim izmene
-                this.id = masina.ID;
-                this.Opis = masina.Opis;
-                this.Slika = masina.Slika;
-                this.Aktivan = masina.Aktivan;
-            }
-            return true;
-        }
-
-
         private void FormirajSpisakMasina()
         {
             Masine = new ObservableCollection<Masina>(_dbService.GetAllMasine());
         }
 
-        private void AzurirajListu(long odgovor)
-        {
-            if (this.id == 0)
-            {
-                Masine.Add(new Masina()
-                {
-                    ID = (int)odgovor,
-                    Naziv = this.Naziv,
-                    Opis = this.Opis,
-                    Slika = this.Slika,
-                    Aktivan = this.Aktivan,
-                });
-            }
-            else
-            {
-                Masina masina = this.Masine.First((p) => p.ID == this.id);
-                if (masina != null)
-                {
-                    masina.Naziv = this.Naziv;
-                    masina.Opis = this.Opis;
-                    masina.Slika = this.Slika;
-                    masina.Aktivan = this.Aktivan;
-                }
-            }
-        }
 
+        #endregion
 
-        #endregion //Methods
-
-        #region Ctor
-
-        public MasineViewModel(IDbService dbService)
-        {
-            _dbService = dbService;
-
-            FormirajSpisakMasina();
-        }
-
-        #endregion //Ctor
     }
 }

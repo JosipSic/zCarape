@@ -103,7 +103,14 @@
           <ItemsControl  VerticalAlignment="Stretch" ItemsSource="{Binding Masine}" Margin="10,4,0,0">
             <ItemsControl.ItemTemplate>
               <DataTemplate>
-                <CheckBox Content="{Binding Naziv}" IsChecked="{Binding Izbor}" VerticalContentAlignment="Center"/>
+                <CheckBox  IsChecked="{Binding Izbor}" VerticalContentAlignment="Center">
+                  <CheckBox.Content>
+                    <StackPanel Orientation="Horizontal">
+                      <TextBlock Text="{Binding Naziv}"/>
+                      <TextBlock Text="{Binding Opis}" Margin="7,0,0,0" FontStyle="Italic"/>
+                    </StackPanel>
+                  </CheckBox.Content>
+                </CheckBox>
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>

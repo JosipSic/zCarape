@@ -1,5 +1,6 @@
-﻿using System.Windows.Controls;
-using System.Windows.Input;
+﻿using DevExpress.Xpf.Printing;
+using System.Windows;
+using System.Windows.Controls;
 
 namespace Proizvodnja.Views
 {
@@ -11,22 +12,13 @@ namespace Proizvodnja.Views
         public Masine()
         {
             InitializeComponent();
-            Loaded += Masine_Loaded;
         }
 
-        private void Masine_Loaded(object sender, System.Windows.RoutedEventArgs e)
+        private void PrintButton_ItemClick(object sender, DevExpress.Xpf.Bars.ItemClickEventArgs e)
         {
-            NazivTextBox.Focus();
-        }
+            var link = new PrintableControlLink(view, "Cenovnik") { ReportHeaderTemplate = Resources["reportHeader"] as DataTemplate };
 
-        private void ObavezanTextBox_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
-        {
-            if (e.Key == Key.Enter && !string.IsNullOrWhiteSpace(((TextBox)sender).Text))
-            {
-                ((TextBox)sender).GetBindingExpression(TextBox.TextProperty).UpdateSource();
-                ((TextBox)sender).MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
-            }
+            PrintHelper.ShowRibbonPrintPreview(this, link);
         }
-
     }
 }
