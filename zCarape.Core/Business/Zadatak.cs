@@ -22,7 +22,14 @@ namespace zCarape.Core.Business
         public int Redosled { get; set; }
         public NalogURadu NalogURadu { get; set; }
 
-        public bool CanGoLeft { get; set; }
+        private bool _canGoLeft;
+        public bool CanGoLeft
+        {
+            get { return _canGoLeft; }
+            set { _canGoLeft = value;
+                NotifyPropertyChanged();
+            }
+        }
 
         private DateTime _datumPredajnice;
         public DateTime DatumPredajnice

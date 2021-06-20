@@ -1,10 +1,14 @@
-﻿using Prism.Commands;
+﻿using Jezgro.Views;
+using Prism.Commands;
 using Prism.Mvvm;
 using Prism.Regions;
+using Prism.Services.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using zCarape.Core;
 using zCarape.Core.Business;
+using zCarape.Core.Models;
 using zCarape.Services.Interfaces;
 
 namespace Proizvodnja.ViewModels
@@ -19,6 +23,8 @@ namespace Proizvodnja.ViewModels
 
         #region Fields
         private readonly IDbService _dbService;
+        private readonly IRegionManager _regionManager;
+        private readonly IDialogService _dialogService;
         private bool _programskaPromenaDatuma = false;
         #endregion
 
@@ -29,6 +35,14 @@ namespace Proizvodnja.ViewModels
         {
             get { return _stavke; }
             set { SetProperty(ref _stavke, value); }
+        }
+
+        // SelectedStavka
+        private IzvestajStavka _selectedStavka;
+        public IzvestajStavka SelectedStavka
+        {
+            get { return _selectedStavka; }
+            set { SetProperty(ref _selectedStavka, value); }
         }
 
         // DatumOd
@@ -55,14 +69,16 @@ namespace Proizvodnja.ViewModels
             set { SetProperty(ref _period, value); KreirajListu(); }
         }
 
-        public bool KeepAlive => false;
+        public bool KeepAlive { get; set; } = false;
 
         #endregion
 
         #region Ctor
-        public IzvestajiViewModel(IDbService dbService)
+        public IzvestajiViewModel(IDbService dbService, IRegionManager regionManager, IDialogService dialogService)
         {
             _dbService = dbService;
+            _regionManager = regionManager;
+            _dialogService = dialogService;
         }
         #endregion
 
@@ -82,6 +98,71 @@ namespace Proizvodnja.ViewModels
             {
                 PomeriPeriod(-1);
             }
+        }
+
+        // EditNalogCommand
+        private DelegateCommand _editNalogCommand;
+        public DelegateCommand EditNalogCommand =>
+            _editNalogCommand ?? (_editNalogCommand = new DelegateCommand(ExecuteEditNalogCommand));
+
+        void ExecuteEditNalogCommand()
+        {
+            if (SelectedStavka==null)
+            {
+                return;
+            }
+            NavigationParameters param = new NavigationParameters();
+            param.Add("RadniNalogID", SelectedStavka.RadniNalog);
+            param.Add("GoToView", ViewNames.Izvestaji);
+            KeepAlive = true;
+            _regionManager.RequestNavigate(RegionNames.ContentRegion, ViewNames.NoviRN3, param);
+            KeepAlive = false;
+        }
+
+        // PregledRnCommand
+        private DelegateCommand _pregledRnCommand;
+        public DelegateCommand PregledRnCommand =>
+            _pregledRnCommand ?? (_pregledRnCommand = new DelegateCommand(ExecutePregledRnCommand));
+
+        void ExecutePregledRnCommand()
+        {
+            if (SelectedStavka==null)
+            {
+                return;
+            }
+            IDialogParameters dialogParameters = new DialogParameters();
+            dialogParameters.Add("ID", SelectedStavka.RadniNalog);
+            _dialogService.Show("PregledRnDijalog", dialogParameters, null);
+        }
+
+        // EditDezenCommand
+        private DelegateCommand _editDezenCommand;
+        public DelegateCommand EditDezenCommand =>
+            _editDezenCommand ?? (_editDezenCommand = new DelegateCommand(ExecuteEditDezenCommand));
+
+        void ExecuteEditDezenCommand()
+        {
+            if (SelectedStavka == null)
+            {
+                return;
+            }
+
+            RadniNalog rn = _dbService.GetRadniNalog(SelectedStavka.RadniNalog);
+            if (rn==null || rn.DezenArtiklaID==0)
+            {
+                return;
+            }
+
+            GlobalniKod.DezenParam.Blanko();
+            GlobalniKod.DezenParam.ArtikalID = rn.ArtikalID;
+            GlobalniKod.DezenParam.ArtikalSifra = SelectedStavka.Sifra;
+            GlobalniKod.DezenParam.ArtikalNaziv = SelectedStavka.Naziv;
+            GlobalniKod.DezenParam.DezenArtiklaID = rn.DezenArtiklaID;
+
+            DezeniEdit dezeniEdit = new DezeniEdit();
+            GlobalniKod.DezenParam.Window = dezeniEdit;
+            dezeniEdit.ShowDialog();
+
         }
 
         #endregion

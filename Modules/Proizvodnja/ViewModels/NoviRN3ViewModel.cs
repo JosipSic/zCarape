@@ -20,6 +20,7 @@ namespace Proizvodnja.ViewModels
         private readonly IDbService _dbService;
         private readonly IRegionManager _regionManager;
         private long _radniNalogID = 0;
+        private string _editBackView;
 
         #endregion //Fields
 
@@ -196,7 +197,10 @@ namespace Proizvodnja.ViewModels
         {
             if (IsEdit)
             {
-                _regionManager.RequestNavigate(RegionNames.ContentRegion, ViewNames.MasineURadu);
+                if (_editBackView!=null)
+                    _regionManager.RequestNavigate(RegionNames.ContentRegion, _editBackView);
+                else
+                    _regionManager.RequestNavigate(RegionNames.ContentRegion, ViewNames.MasineURadu);
             }
             else
             {
@@ -411,6 +415,12 @@ namespace Proizvodnja.ViewModels
         public void OnNavigatedTo(NavigationContext navigationContext)
         {
             var izmena = navigationContext.Parameters["RadniNalogID"];
+            var goToView = navigationContext.Parameters["GoToView"];
+            if (goToView!=null)
+            {
+                _editBackView = (string)goToView;
+            }
+
             if (izmena !=null)
             {
                 this._radniNalogID = (long)izmena;

@@ -4,6 +4,7 @@
              xmlns:prism="http://prismlibrary.com/" 
              xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
              xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+             xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
              xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
              xmlns:dxmmv="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
              prism:ViewModelLocator.AutoWireViewModel="True">
@@ -41,7 +42,7 @@
       </StackPanel>
       <dx:SimpleButton Name="PrintButton" Content="Štampa" Glyph="{dx:DXImage 'SvgImages/Print/Print.svg'}" HorizontalAlignment="Right" Margin="20,0,0,0" GlyphHeight="25" Click="PrintButton_Click" IsEnabled="{DXBinding 'Stavke!=null'}"/>
     </StackPanel>
-      <dxg:GridControl Name="gridControl" Grid.Row="1" ItemsSource="{Binding Stavke}" AutoGenerateColumns="AddNew">
+      <dxg:GridControl Name="gridControl" Grid.Row="1" ItemsSource="{Binding Stavke}" SelectedItem="{Binding SelectedStavka}" AutoGenerateColumns="AddNew">
       <dxg:GridControl.View>
         <dxg:TableView Name="IzvestajTableView" AllowEditing="False" ShowTotalSummary="True" GroupSummaryDisplayMode="AlignByColumns" PrintGroupSummaryDisplayMode="AlignByColumns" PrintAllGroups="False" BestFitModeOnSourceChange="Smart">
           <dxg:TableView.PrintCellStyle>
@@ -50,6 +51,12 @@
               <Setter Property="FontSize" Value="11" />
             </Style>
           </dxg:TableView.PrintCellStyle>
+          <dxg:TableView.RowCellMenuCustomizations>
+            <dxb:BarButtonItem Content="Prikazi/edit dezen" Command="{Binding View.DataContext.EditDezenCommand}"/>
+            <dxb:BarButtonItem Content="Spisak predajnica po radnom nalogu" Command="{Binding View.DataContext.PregledRnCommand}"/>
+            <dxb:BarItemSeparator/>
+            <dxb:BarButtonItem Content="Edituj radni nalog" Command="{Binding View.DataContext.EditNalogCommand}"/>
+          </dxg:TableView.RowCellMenuCustomizations>
         </dxg:TableView>
       </dxg:GridControl.View>
       <dxg:GridControl.TotalSummary>

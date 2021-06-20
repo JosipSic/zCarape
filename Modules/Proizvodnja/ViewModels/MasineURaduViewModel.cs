@@ -546,55 +546,53 @@ namespace Proizvodnja.ViewModels
             }
         }
 
-        private void MoveLeftZadatak(Zadatak zadatak2)
+        private void MoveLeftZadatak(Zadatak zadatak)
         {
-            if (zadatak2 == null) return;
+            if (zadatak == null) 
+                return;
+            MasinaURadu masinaURadu = MasineURadu.First(mur => mur.MasinaID == zadatak.MasinaID);
+            var indexZadatka = masinaURadu.Zadaci.IndexOf(zadatak);
 
-            // Zadatak koji je istog statusa i iste hitnosti a ima redosled koji je najveci, ali manji ili jednak od zadatak2.redosled
-            // ako je isti redosled onda gleda najveci RadniNalogID
-            var zadaciIspred = (from m in MasineURadu
-                                where m.MasinaID == zadatak2.MasinaID
-                                from z in m.Zadaci
-                                where z.NalogURadu.StatusNaloga == zadatak2.NalogURadu.StatusNaloga
-                                && z.Hitno == zadatak2.Hitno
-                                && (z.Redosled < zadatak2.Redosled || (z.Redosled==zadatak2.Redosled && z.ID<zadatak2.ID))
-                               && z.ID != zadatak2.ID
-                               orderby z.Redosled descending
-                               select z).ToList();
-            if (zadaciIspred == null || zadaciIspred.Count == 0)
+            if (indexZadatka == 0)
                 return;
 
-            int redosledPrethodnogZadatka = zadaciIspred.First().Redosled;
-            int zahtevaniRedosled = redosledPrethodnogZadatka - 1;
-            _dbService.SetRedosledAngazovaneMasine(zadatak2.ID, redosledPrethodnogZadatka - 1);
+            Zadatak prethodniZadatak = masinaURadu.Zadaci[indexZadatka - 1];
 
-            // Ako ima vise zadataka promeravam redosled svih prethodnih
-            if (zadaciIspred.Count > 1)
+            // Provera da li je isti stepen hitnosti i status
+            if (zadatak.NalogURadu.Hitno != prethodniZadatak.NalogURadu.Hitno || zadatak.NalogURadu.StatusNaloga != zadatak.NalogURadu.StatusNaloga)
+                return;
+
+            bool tempCanGoLeft = prethodniZadatak.CanGoLeft;
+            prethodniZadatak.CanGoLeft = zadatak.CanGoLeft;
+            zadatak.CanGoLeft = tempCanGoLeft;
+
+            masinaURadu.Zadaci.Move(indexZadatka, indexZadatka-1);
+
+            // Upisujem u bazu i niz novi redosled
+            int trenutniIndex = indexZadatka-1;
+            Zadatak trenutniZadatak;
+            int redosledNarednogZadatka = prethodniZadatak.Redosled; // Ovo je sad redosled poslednjeg zadatka
+            while (true)
             {
-                for (int i = 1; i < zadaciIspred.Count; i++)
+                trenutniZadatak = masinaURadu.Zadaci[trenutniIndex];
+
+                if (zadatak.NalogURadu.Hitno != trenutniZadatak.NalogURadu.Hitno || zadatak.NalogURadu.StatusNaloga != trenutniZadatak.NalogURadu.StatusNaloga)
+                    break;
+
+                if (trenutniZadatak.Redosled >= redosledNarednogZadatka)
                 {
-                    if (zadaciIspred[i].Redosled >= zahtevaniRedosled)
-                    {
-                        zahtevaniRedosled--;
-                        _dbService.SetRedosledAngazovaneMasine(zadaciIspred[i].ID, zahtevaniRedosled);
-                    }
+                    int noviRedosled = redosledNarednogZadatka - 1;
+                    _dbService.SetRedosledAngazovaneMasine(trenutniZadatak.ID, noviRedosled);
+                    trenutniZadatak.Redosled = noviRedosled;
                 }
-            }
 
+                trenutniIndex--;
+                if (trenutniIndex < 0)
+                    break;
 
+                redosledNarednogZadatka = trenutniZadatak.Redosled;
+           }
 
-            //Zadatak zadatak1 = (from m in MasineURadu
-            //                    where m.MasinaID == zadatak2.MasinaID
-            //                    from z in m.Zadaci
-            //                    where z.NalogURadu.StatusNaloga == zadatak2.NalogURadu.StatusNaloga 
-            //                    && z.Hitno == zadatak2.Hitno
-            //                    && z.Redosled <= zadatak2.Redosled 
-            //                    && z.ID!=zadatak2.ID
-            //                    orderby z.Redosled descending
-            //                    select z).FirstOrDefault();
-            //if (zadatak1 == null) return;
-
-            OsveziFormu();
         }
 
 

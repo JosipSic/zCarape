@@ -39,15 +39,13 @@
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="25"/>
           </Grid.ColumnDefinitions>
-          <Button Padding="0"  Command="{Binding RelativeSource={RelativeSource  Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.PrethodniIstorijaCommand}" CommandParameter="{Binding}"  Content="&lt;" Grid.Column="0" Background="Transparent" BorderBrush="{x:Null}" Visibility="{Binding Istorija.IsNotPrvi, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+          <dx:SimpleButton Padding="0"  Command="{Binding RelativeSource={RelativeSource  Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.PrethodniIstorijaCommand}" CommandParameter="{Binding}"  Content="&lt;" Grid.Column="0" Background="Transparent" BorderBrush="{x:Null}" BorderThickness="0" Visibility="{Binding Istorija.IsNotPrvi, Converter={StaticResource BooleanToVisibilityConverter}}"/>
           <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
             <TextBlock Text="N." VerticalAlignment="Center"/>
             <TextBlock Text="{Binding Istorija.RadniNalogID}" FontWeight="DemiBold" VerticalAlignment="Center"/>
-            <Button Command="{Binding RelativeSource={RelativeSource  Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.PregledRnCommand}" CommandParameter="{Binding Istorija.RadniNalogID}"  Height="25" Background="Transparent" BorderBrush="Transparent">
-              <Image Source="pack://application:,,,/zCarape;component/Images/view.png" Margin="5,0,0,0" />
-            </Button>
+            <dx:SimpleButton Command="{Binding RelativeSource={RelativeSource  Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.PregledRnCommand}" CommandParameter="{Binding Istorija.RadniNalogID}"  Height="25" Background="Transparent" BorderBrush="Transparent" BorderThickness="0" Glyph="pack://application:,,,/zCarape;component/Images/view.png" Margin="5,0,0,0"/>
           </StackPanel>
-          <Button Padding="0" Command="{Binding RelativeSource={RelativeSource  Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.NaredniIstorijaCommand}" CommandParameter="{Binding}" Content="&gt;" Grid.Column="2" Background="Transparent" BorderBrush="{x:Null}" Visibility="{Binding Istorija.IsNotZadnji, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+          <dx:SimpleButton Padding="0" Command="{Binding RelativeSource={RelativeSource  Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.NaredniIstorijaCommand}" CommandParameter="{Binding}" Content="&gt;" Grid.Column="2" Background="Transparent" BorderBrush="{x:Null}" BorderThickness="0" Visibility="{Binding Istorija.IsNotZadnji, Converter={StaticResource BooleanToVisibilityConverter}}"/>
         </Grid>
         <Grid Grid.Row="1" Margin="2,0,0,0">
           <Grid.ColumnDefinitions>
@@ -88,7 +86,7 @@
             <TextBlock Text="{Binding Istorija.DrugaKl}" FontWeight="DemiBold"/>
           </StackPanel>
 
-          <Button Grid.Row="6" Grid.RowSpan="2" Grid.Column="1" Content="->" Height="30" Padding="0" BorderBrush="{x:Null}"  Command="{Binding RelativeSource={RelativeSource  Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.AktivirajNalogCommand}" CommandParameter="{Binding}"/>
+          <dx:SimpleButton Grid.Row="6" Grid.RowSpan="2" Grid.Column="1" Content="->" Height="30" Padding="0" BorderBrush="{x:Null}" BorderThickness="0" Command="{Binding RelativeSource={RelativeSource  Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.AktivirajNalogCommand}" CommandParameter="{Binding}"/>
         </Grid>
       </Grid>
     </ControlTemplate>
@@ -202,9 +200,7 @@
                           <Rectangle Grid.Column="0" Grid.RowSpan="11" Fill="DarkGreen" Margin="0,0,5,0"/>
 
                           <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal">
-                            <Button Command="{Binding RelativeSource={RelativeSource  Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.MoveLeftCommand}" CommandParameter="{Binding}"  Grid.Column="0" Background="Transparent" BorderBrush="{x:Null}" Visibility="{Binding CanGoLeft, Converter={StaticResource BooleanToVisibilityConverter }}">
-                              <Image Source="pack://application:,,,/zCarape;component/Images/GoLeft.png" />
-                            </Button>
+                            <dx:SimpleButton Command="{Binding RelativeSource={RelativeSource  Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.MoveLeftCommand}" CommandParameter="{Binding}"  Grid.Column="0" Background="Transparent" BorderBrush="{x:Null}" Visibility="{Binding CanGoLeft, Converter={StaticResource BooleanToVisibilityConverter }}" Glyph="pack://application:,,,/zCarape;component/Images/GoLeft.png" BorderThickness="0"/>
                             <TextBlock  Text="Nalog" VerticalAlignment="Center"/>
                           </StackPanel>
                           <TextBlock Grid.Row="3" Grid.Column="1" Text="Artikal"/>
@@ -216,12 +212,8 @@
 
                           <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal">
                             <TextBlock  FontWeight="Bold" Text="{Binding Path=NalogURadu.RadniNalogID}" VerticalAlignment="Center"/>
-                            <Button Command="{Binding DataContext.EditNalogCommand, RelativeSource ={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding NalogURadu.RadniNalogID}"  Height="25" Background="Transparent" BorderBrush="Transparent">
-                              <Image Source="pack://application:,,,/zCarape;component/Images/edit.png" />
-                            </Button>
-                            <Button Command="{Binding DataContext.PregledRnCommand, RelativeSource ={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding NalogURadu.RadniNalogID}"  Height="25" Background="Transparent" BorderBrush="Transparent">
-                              <Image Source="pack://application:,,,/zCarape;component/Images/view.png" />
-                            </Button>
+                            <dx:SimpleButton Command="{Binding DataContext.EditNalogCommand, RelativeSource ={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding NalogURadu.RadniNalogID}"  Height="25" Background="Transparent" BorderBrush="Transparent" BorderThickness="0" Glyph="pack://application:,,,/zCarape;component/Images/edit.png"/>
+                            <dx:SimpleButton Command="{Binding DataContext.PregledRnCommand, RelativeSource ={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding NalogURadu.RadniNalogID}"  Height="25" Background="Transparent" BorderBrush="Transparent" BorderThickness="0" Glyph="pack://application:,,,/zCarape;component/Images/view.png"/>
 
                             <ContentControl>
                               <ContentControl.Style>
@@ -340,8 +332,8 @@
                                 </i:EventTrigger>
                               </i:Interaction.Triggers>
                             </DatePicker>
-                            <Button Content="&lt;" Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.PrethodniDanCommand}" CommandParameter="{Binding}" VerticalAlignment="Top" Padding="2,0" BorderBrush="{x:Null}" Background="Transparent"/>
-                            <Button Content="&gt;" Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.NaredniDanCommand}" CommandParameter="{Binding}" VerticalAlignment="Top" Padding="2,0" BorderBrush="{x:Null}" Background="Transparent"/>
+                            <dx:SimpleButton Content="&lt;" Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.PrethodniDanCommand}" CommandParameter="{Binding}" VerticalAlignment="Top" Padding="2,0" BorderBrush="{x:Null}" BorderThickness="0" Background="Transparent"/>
+                            <dx:SimpleButton Content="&gt;" Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.NaredniDanCommand}" CommandParameter="{Binding}" VerticalAlignment="Top" Padding="2,0" BorderBrush="{x:Null}" BorderThickness="0" Background="Transparent"/>
                           </StackPanel>
                           <Border Grid.Row="3" Grid.RowSpan="8" Grid.Column="3" BorderBrush="Black" BorderThickness="1" VerticalAlignment="Top" >
                             <Border.Style>

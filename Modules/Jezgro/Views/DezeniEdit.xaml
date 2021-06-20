@@ -1,7 +1,8 @@
 ﻿<Window
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:prism="http://prismlibrary.com/"          
+             xmlns:prism="http://prismlibrary.com/"  
+             xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
              xmlns:core="clr-namespace:zCarape.Core;assembly=zCarape.Core"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="Jezgro.Views.DezeniEdit"
              prism:ViewModelLocator.AutoWireViewModel="True" WindowStartupLocation="CenterScreen"
@@ -69,36 +70,10 @@
       <TextBox Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3" TextWrapping="Wrap" MinHeight="66" Text="{Binding Opis}" AcceptsReturn="True"/>
 
       <!-- Snimi, Odustani -->
-      <StackPanel Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2"  Orientation="Horizontal" HorizontalAlignment="Right">
-        <StackPanel.Resources>
-          <Style TargetType="{x:Type Image}">
-            <Style.Triggers>
-              <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type UIElement}, AncestorLevel=1}, Path=IsEnabled}"
-                             Value="False">
-                <Setter Property="Opacity"
-                            Value="0.25" />
-              </DataTrigger>
-            </Style.Triggers>
-          </Style>
-        </StackPanel.Resources>
-        <Button  VerticalAlignment="Center" Margin="10,0"  Width="90" Command="{Binding SnimiCommand}" Height="35">
-          <StackPanel Orientation="Horizontal">
-            <Image Source="pack://application:,,,/zCarape;component/Images/Save.png" Stretch="Uniform" Margin="2"/>
-            <TextBlock Text="Snimi" VerticalAlignment="Center" Margin="10,0"/>
-          </StackPanel>
-        </Button>
-        <Button  VerticalAlignment="Center" Margin="10,0"  Width="90" Command="{Binding IzbrisiCommand}" Height="35">
-          <StackPanel Orientation="Horizontal">
-            <Image Source="pack://application:,,,/zCarape;component/Images/Delete.png" Stretch="Uniform" Margin="2"/>
-            <TextBlock Text="Izbriši" VerticalAlignment="Center" Margin="10,0"/>
-          </StackPanel>
-        </Button>
-        <Button  VerticalAlignment="Center"   Width="110" Command="{Binding OdustaniCommand}" Height="35">
-          <StackPanel Orientation="Horizontal">
-            <Image Source="pack://application:,,,/zCarape;component/Images/Undo.png" Stretch="Uniform" Margin="2"/>
-            <TextBlock Text="Odustani" VerticalAlignment="Center" Margin="10,0"/>
-          </StackPanel>
-        </Button>
+      <StackPanel Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2"  Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Stretch">
+        <dx:SimpleButton  VerticalAlignment="Center" Margin="10,0"   Command="{Binding SnimiCommand}" Height="35" Glyph="pack://application:,,,/zCarape;component/Images/Save.png" Content="Snimi" GlyphAlignment="Left"/>
+        <dx:SimpleButton  VerticalAlignment="Center" Margin="10,0"   Command="{Binding IzbrisiCommand}" Height="35" Glyph="pack://application:,,,/zCarape;component/Images/Delete.png" Content="Izbriši" />
+        <dx:SimpleButton  VerticalAlignment="Center"    Command="{Binding OdustaniCommand}" Height="35" Glyph="pack://application:,,,/zCarape;component/Images/Undo.png" Content="Odustani"/>
       </StackPanel>
 
     </Grid>
