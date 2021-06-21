@@ -16,7 +16,7 @@ namespace zCarape.ViewModels
 
         #region Properties
 
-        private string _title = "zCarape";
+        private string _title = "zSocks";
         public string Title
         {
             get { return _title; }

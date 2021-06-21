@@ -16,7 +16,7 @@ using Prism.Services.Dialogs;
 
 namespace Proizvodnja.ViewModels
 {
-    public class MasineURaduViewModel : BindableBase, IRegionMemberLifetime
+    public class MasineURaduViewModel : BindableBase, IRegionMemberLifetime, INavigationAware
     {
 
         #region Fields
@@ -24,6 +24,7 @@ namespace Proizvodnja.ViewModels
         private readonly IDbService _dbService;
         private readonly IRegionManager _regionManager;
         private readonly IDialogService _dialogService;
+        private Zadatak _zadatakUFokusu;
 
         #endregion // Fields
 
@@ -89,6 +90,7 @@ namespace Proizvodnja.ViewModels
             }
             NavigationParameters param = new NavigationParameters();
             param.Add("RadniNalogID", parameter);
+            KeepAlive = true;
             _regionManager.RequestNavigate(RegionNames.ContentRegion, ViewNames.NoviRN3, param);
         }
 
@@ -276,6 +278,16 @@ namespace Proizvodnja.ViewModels
             _dialogService.Show("PregledRnDijalog", dialogParameters, null);
         }
 
+        // IsInFocusCommand
+        private DelegateCommand<Zadatak> _isInFocusCommand;
+        public DelegateCommand<Zadatak> IsInFocusCommand =>
+            _isInFocusCommand ?? (_isInFocusCommand = new DelegateCommand<Zadatak>(ExecuteIsInFocusCommand));
+
+        private void ExecuteIsInFocusCommand(Zadatak zadatak)
+        {
+            OznaciDaJeZadatakUFokusu(zadatak);
+        }
+
         #endregion //Commands
 
         #region Ctor
@@ -386,6 +398,15 @@ namespace Proizvodnja.ViewModels
         {
             MasineURadu = new ObservableCollection<MasinaURadu>(_dbService.GetAllMasineURadu(DateTime.Now.Date));
             FormirajIstoriju();
+
+            if (GlobalniKod.ZadatakIdUFokusu != 0)
+            {
+                Zadatak zadatak = MasineURadu.SelectMany(m => m.Zadaci).FirstOrDefault(z => z.ID == GlobalniKod.ZadatakIdUFokusu);
+                if (zadatak!=null)
+                {
+                    OznaciDaJeZadatakUFokusu(zadatak);
+                }
+            }
         }
 
         private void FormirajListuRadnika()
@@ -595,13 +616,74 @@ namespace Proizvodnja.ViewModels
 
         }
 
+        private void OznaciDaJeZadatakUFokusu(Zadatak zadatak)
+        {
+            if (zadatak == null || (_zadatakUFokusu != null && _zadatakUFokusu == zadatak))
+                return;
+
+            if (_zadatakUFokusu != null)
+                _zadatakUFokusu.IsInFocus = false;
+
+            zadatak.IsInFocus = true;
+            _zadatakUFokusu = zadatak;
+
+            GlobalniKod.ZadatakIdUFokusu = zadatak.ID;
+
+            // Obelezavam na ostalim masinama svojstvo IsAnotherInFocus
+            foreach (var masina in MasineURadu)
+            {
+                foreach (var z in masina.Zadaci)
+                {
+                    if (z.NalogURadu.RadniNalogID == zadatak.NalogURadu.RadniNalogID
+                        && z.ID!=zadatak.ID)
+                    {
+                        z.IsAnotherInFocus = true;
+                    }
+                    else
+                    {
+                        if (z.IsAnotherInFocus)
+                        {
+                            z.IsAnotherInFocus = false;
+                        }
+                    }
+                }
+            }
+        }
 
         #endregion //Methods
 
         #region IRegionMemberLifetime
-        public bool KeepAlive => false;
+        public bool KeepAlive { get; set; } = true;
 
         #endregion //IRegionMemberLifetime
+
+        #region INavigationAware
+        public void OnNavigatedTo(NavigationContext navigationContext)
+        {
+            var param = navigationContext.Parameters["NeOsvezavaj"];
+            if (param != null && (bool)param == true)
+            {
+                return;     
+            }
+
+            if (GlobalniKod.RadniciSuAzurirani)
+            {
+                FormirajListuRadnika();
+            }
+
+            OsveziFormu();
+        }
+
+        public bool IsNavigationTarget(NavigationContext navigationContext)
+        {
+            return true;
+        }
+
+        public void OnNavigatedFrom(NavigationContext navigationContext)
+        {
+        }
+
+        #endregion
 
     }
 }

@@ -1,0 +1,50 @@
+﻿<UserControl x:Class="Proizvodnja.Views.Lica"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:prism="http://prismlibrary.com/"             
+             xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+             xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
+             xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
+             xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+             xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
+             xmlns:vm="clr-namespace:Proizvodnja.ViewModels"
+             prism:ViewModelLocator.AutoWireViewModel="True" MaxWidth="650" HorizontalAlignment="Left">
+  <UserControl.Resources>
+    <DataTemplate x:Key="reportHeader">
+      <dxe:TextEdit IsPrintingMode="True" Width="{Binding UsablePageWidth}" EditValue="Radnici" FontSize="16"/>
+    </DataTemplate>
+  </UserControl.Resources>
+
+  <Grid Margin="10,0,0,0">
+    <Grid.RowDefinitions >
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+    <TextBlock Text="RADNICI" FontWeight="Bold" FontSize="24" TextAlignment="Left" Margin="10"/>
+    <dxb:ToolBarControl Grid.Row="1" Orientation="Horizontal" AllowQuickCustomization="False" Width="{Binding ElementName=gridControl, Path=ActualWidth}" HorizontalAlignment="Left" IsEnabled="{Binding ElementName=view, Path=AreUpdateRowButtonsShown, Converter={dx:NegationConverter}}">
+      <dxb:BarButtonItem Name="IzbrisiBarButtonItem" Content="Izbriši red" Command="{Binding IzbrisiLiceCommand}" BarItemDisplayMode="ContentAndGlyph" Glyph="{dx:DXImage SvgImages/Icon Builder/Actions_Delete.svg}"/>
+      <dxb:BarButtonItem Name="PrintButton" Content="štampa" BarItemDisplayMode="ContentAndGlyph" Glyph="{dx:DXImage 'Images/Print/Print_16x16.png'}" Margin="10,5,20,5" ItemClick="PrintButton_ItemClick" />
+    </dxb:ToolBarControl>
+
+    <dxg:GridControl Name="gridControl" Grid.Row="2" ItemsSource="{Binding Lica}" SelectedItem="{Binding SelectedLice}"  HorizontalAlignment="Left">
+      <dxg:GridColumn FieldName="Ime" Header="Ime" IsSmart="True"/>
+      <dxg:GridColumn FieldName="Prezime" Header="Prezime" />
+      <dxg:GridColumn FieldName="RadnoMesto" Header="Radno mesto"/>
+      <dxg:GridColumn FieldName="Aktivan" Header="Aktivan">
+        <dxg:GridColumn.EditSettings>
+          <dxe:CheckEditSettings/>
+        </dxg:GridColumn.EditSettings>
+      </dxg:GridColumn>
+      <dxg:GridControl.View>
+        <dxg:TableView x:Name="view" ShowGroupPanel="False"
+                       ShowUpdateRowButtons="OnCellValueChange" 
+                       NewItemRowPosition="Bottom" AutoWidth="True">
+          <dxmvvm:Interaction.Behaviors>
+            <dxmvvm:EventToCommand EventName="ValidateRow" Command="{Binding ValidateRowCommand}" PassEventArgsToCommand="True"/>
+          </dxmvvm:Interaction.Behaviors>
+        </dxg:TableView>
+      </dxg:GridControl.View>
+    </dxg:GridControl>
+  </Grid>
+</UserControl>

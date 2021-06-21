@@ -180,6 +180,27 @@ namespace zCarape.Core.Business
             }
         }
 
+        private bool _isInFocus;
+        public bool IsInFocus
+        {
+            get { return _isInFocus; }
+            set { _isInFocus = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        // Ako je isti radni nalog u fokusu na drugoj masini
+        private bool _isAnotherInFocus;
+        public bool IsAnotherInFocus
+        {
+            get { return _isAnotherInFocus; }
+            set
+            {
+                _isAnotherInFocus = value;
+                NotifyPropertyChanged();
+            }
+        }
+
         /// <summary>
         /// Shallow Copy. NalogURadu points to the same instance.
         /// </summary>

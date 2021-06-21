@@ -184,6 +184,7 @@ namespace Proizvodnja.ViewModels
                 _radniNalogID = odgovor;
                 SnimiMasine();
                 if (!IsEdit) { MessageBox.Show($"Radni nalog je snimlje u bazu pod brojem {odgovor}", "Novi RN", MessageBoxButton.OK, MessageBoxImage.Information); }
+ 
                 _regionManager.RequestNavigate(RegionNames.ContentRegion, ViewNames.MasineURadu);
             }
         }
@@ -197,10 +198,14 @@ namespace Proizvodnja.ViewModels
         {
             if (IsEdit)
             {
-                if (_editBackView!=null)
+                if (_editBackView != null)
                     _regionManager.RequestNavigate(RegionNames.ContentRegion, _editBackView);
                 else
-                    _regionManager.RequestNavigate(RegionNames.ContentRegion, ViewNames.MasineURadu);
+                {
+                    NavigationParameters param = new NavigationParameters();
+                    param.Add("NeOsvezavaj", true);
+                    _regionManager.RequestNavigate(RegionNames.ContentRegion, ViewNames.MasineURadu, param);
+                }
             }
             else
             {

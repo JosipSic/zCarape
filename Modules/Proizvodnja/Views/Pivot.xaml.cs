@@ -36,5 +36,15 @@ namespace Proizvodnja.Views
 
         }
 
+        private void ChartControl_CustomDrawCrosshair(object sender, CustomDrawCrosshairEventArgs e)
+        {
+            foreach (CrosshairElementGroup g in e.CrosshairElementGroups)
+            {
+                foreach (CrosshairElement el in g.CrosshairElements)
+                {
+                    el.Visible = !double.IsNaN(el.SeriesPoint.Value) && el.SeriesPoint.Value != 0;
+                }
+            }
+        }
     }
 }

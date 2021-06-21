@@ -28,6 +28,7 @@ namespace Proizvodnja
             containerRegistry.RegisterForNavigation<NoviRN1Artikal, NoviRN1ArtikalViewModel>();
             containerRegistry.RegisterForNavigation<NoviRN2Dezen, NoviRN2DezenViewModel>();
             containerRegistry.RegisterForNavigation<NoviRN3, NoviRN3ViewModel>();
+            containerRegistry.RegisterForNavigation<Lica, LicaViewModel>();
 
             containerRegistry.RegisterDialog<PregledRnDijalog, PregledRnDijalogViewModel>();
 
@@ -39,6 +40,7 @@ namespace Proizvodnja
             ViewModelLocationProvider.Register<Predajnica, PredajnicaViewModel>();
             ViewModelLocationProvider.Register<NoviRN2Dezen, NoviRN2DezenViewModel>();
             ViewModelLocationProvider.Register<NoviRN3, NoviRN3ViewModel>();
+            ViewModelLocationProvider.Register<Lica, LicaViewModel>();
 
             // Servisi
             // containerRegistry.RegisterSingleton<IDbService, DBService>(); //Ovaj servis se registruje u glavnom zCarapeProjektu

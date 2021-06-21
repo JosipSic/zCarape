@@ -14,5 +14,8 @@ namespace zCarape.Core
 
         public static DezenParam DezenParam { get; set; } = new DezenParam();
 
+        public static long ZadatakIdUFokusu;
+
+        public static bool RadniciSuAzurirani = false;
     }
 }

@@ -1664,12 +1664,22 @@ namespace zCarape.Services
 
         public IEnumerable<Lice> GetAllAktivnaLica()
         {
+            return GetAllLica(samoAktivna: true);
+        }
+
+        public IEnumerable<Lice> GetAllLica(bool samoAktivna=false)
+        {
             List<Lice> lista = new List<Lice>();
             using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
             con.Open();
 
             using var cmd = new SQLiteCommand(con);
-            cmd.CommandText = "SELECT * FROM Lica WHERE Aktivan=1";
+            cmd.CommandText = "SELECT * FROM Lica";
+ 
+            if (samoAktivna)
+            {
+                cmd.CommandText += " WHERE Aktivan=1";
+            }
 
             using SQLiteDataReader dr = cmd.ExecuteReader();
 
@@ -1682,10 +1692,10 @@ namespace zCarape.Services
                     lista.Add(new Lice()
                     {
                         ID = (long)dr["id"],
-                        Ime = (string)dr["ime"],
-                        Prezime = (string)dr["prezime"],
-                        RadnoMesto = (string)dr["radnomesto"],
-                        Aktivan = (long)dr["aktivan"]==1,
+                        Ime = (dr["ime"] == DBNull.Value) ? string.Empty : (string)dr["ime"],
+                        Prezime = (dr["prezime"] == DBNull.Value) ? string.Empty : (string)dr["prezime"],
+                        RadnoMesto = (dr["radnomesto"] == DBNull.Value) ? string.Empty : (string)dr["radnomesto"],
+                        Aktivan = (long)dr["aktivan"] == 1,
                         VremeUnosa = Helper.ConvertToDateTimeFromSqLite((string)dr["vremeunosa"])
                     }); ;
 
@@ -1693,6 +1703,96 @@ namespace zCarape.Services
             }
 
             return lista;
+        }
+
+        public long InsertOrUpdateLice(Lice lice)
+        {
+            bool noviZapis = lice.ID == 0;
+            if (noviZapis)
+            {
+                return this.InsertLice(lice);
+            }
+            else
+            {
+                return this.UpdateLice(lice) ? lice.ID : 0;
+            }
+        }
+
+        private bool UpdateLice(Lice lice)
+        {
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+            cmd.Parameters.AddWithValue("@id", lice.ID);
+            cmd.Parameters.AddWithValue("@ime", lice.Ime);
+            cmd.Parameters.AddWithValue("@prezime", lice.Prezime);
+            cmd.Parameters.AddWithValue("@radnoMesto", lice.RadnoMesto);
+            cmd.Parameters.AddWithValue("@aktivan", lice.Aktivan);
+
+            cmd.CommandText = "UPDATE Lica SET ime=@ime, prezime=@prezime, radnoMesto=@radnoMesto, aktivan=@aktivan WHERE id=@id";
+
+            cmd.ExecuteNonQuery();
+
+            return true;
+        }
+
+        private long InsertLice(Lice lice)
+        {
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+
+            using var cmd = new SQLiteCommand(con);
+            cmd.Parameters.AddWithValue("@ime", lice.Ime);
+            cmd.Parameters.AddWithValue("@prezime", lice.Prezime);
+            cmd.Parameters.AddWithValue("@radnoMesto", lice.RadnoMesto);
+            cmd.Parameters.AddWithValue("@aktivan", lice.Aktivan);
+            cmd.Parameters.AddWithValue("@vremeUnosa", DateTime.Now);
+
+            cmd.CommandText = "INSERT INTO Lica (Ime,Prezime,RadnoMesto,Aktivan,VremeUnosa) VALUES (@ime,@prezime,@radnoMesto,@aktivan,@vremeUnosa)";
+
+            try
+            {
+                if (cmd.ExecuteNonQuery() == 1)
+                    return con.LastInsertRowId;
+                else
+                    return lice.ID;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(String.Format($"nMessage: {ex.Message}"));
+                return 0;
+            }
+        }
+
+        public bool DeleteLice(long id)
+        {
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+            using var cmd = new SQLiteCommand(con);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.CommandText = "DELETE FROM lica WHERE id=@id";
+            try
+            {
+                return cmd.ExecuteNonQuery() == 1;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message + "\n" + ex.Source);
+            }
+            return false;
+        }
+
+        public bool LiceImaZavisneZapise(long id)
+        {
+            using var con = new SQLiteConnection(GlobalniKod.ConnectionString);
+            con.Open();
+            using var cmd = new SQLiteCommand(con);
+            cmd.CommandText = "SELECT ID FROM Predajnice WHERE liceId=@liceId LIMIT 1";
+            cmd.Parameters.AddWithValue("@liceId", id);
+            object odgovor = cmd.ExecuteScalar();
+
+            return odgovor != null;
         }
 
         #endregion

@@ -4,6 +4,7 @@
              xmlns:prism="http://prismlibrary.com/"  
              xmlns:system="clr-namespace:System;assembly=mscorlib"
              xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
+             xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
              xmlns:core="clr-namespace:zCarape.Core;assembly=zCarape.Core" xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              prism:ViewModelLocator.AutoWireViewModel="True">
   <UserControl.Resources>
@@ -151,7 +152,10 @@
 
                 <!-- Lista zadataka za jednu masinu -->
                 <ScrollViewer Grid.Column="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Hidden" >
-                  <ListBox ItemsSource="{Binding Path=Zadaci}" BorderBrush="{x:Null}" BorderThickness="0">
+                  <ListBox x:Name="zadaciListBox" ItemsSource="{Binding Path=Zadaci}" BorderBrush="{x:Null}" BorderThickness="0">
+                    <dxmvvm:Interaction.Behaviors>
+                      <dxmvvm:EventToCommand EventName="SelectionChanged" Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType=UserControl}, Path=DataContext.IsInFocusCommand}" CommandParameter="{DXBinding '@e(zadaciListBox).SelectedItem'}"/>
+                    </dxmvvm:Interaction.Behaviors>
                     <ListBox.ItemsPanel>
                       <ItemsPanelTemplate>
                         <VirtualizingStackPanel IsItemsHost="True" Orientation="Horizontal"/>
@@ -174,6 +178,18 @@
                     <ListBox.ItemTemplate>
                       <DataTemplate>
                         <Grid Width="Auto">
+                          <dxmvvm:Interaction.Behaviors>
+                            <dxmvvm:EventToCommand EventName="PreviewMouseDown" Command="{Binding RelativeSource={RelativeSource  Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.IsInFocusCommand}" CommandParameter="{Binding}"/>
+                          </dxmvvm:Interaction.Behaviors>
+                          <Grid.Style>
+                            <Style TargetType="{x:Type Grid}">
+                              <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsInFocus}" Value="True">
+                                  <Setter Property="Background" Value="MistyRose"/>
+                                </DataTrigger>
+                              </Style.Triggers>
+                            </Style>
+                          </Grid.Style>
                           <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="8"/>
                             <ColumnDefinition Width="Auto" MinWidth="50"/>
@@ -200,8 +216,18 @@
                           <Rectangle Grid.Column="0" Grid.RowSpan="11" Fill="DarkGreen" Margin="0,0,5,0"/>
 
                           <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal">
+                            <StackPanel.Style>
+                              <Style TargetType="{x:Type StackPanel}">
+                                <Style.Triggers>
+                                  <DataTrigger Binding="{Binding IsAnotherInFocus}" Value="True">
+                                    <Setter Property="Background" Value="MistyRose"/>
+                                  </DataTrigger>
+                                </Style.Triggers>
+                              </Style>
+
+                            </StackPanel.Style>
                             <dx:SimpleButton Command="{Binding RelativeSource={RelativeSource  Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.MoveLeftCommand}" CommandParameter="{Binding}"  Grid.Column="0" Background="Transparent" BorderBrush="{x:Null}" Visibility="{Binding CanGoLeft, Converter={StaticResource BooleanToVisibilityConverter }}" Glyph="pack://application:,,,/zCarape;component/Images/GoLeft.png" BorderThickness="0"/>
-                            <TextBlock  Text="Nalog" VerticalAlignment="Center"/>
+                            <TextBlock  Text="Nalog" VerticalAlignment="Center" />
                           </StackPanel>
                           <TextBlock Grid.Row="3" Grid.Column="1" Text="Artikal"/>
                           <TextBlock Grid.Row="4" Grid.Column="1" Text="Veličina"/>
@@ -282,7 +308,7 @@
                             </TextBlock.Style>
                           </TextBlock>
 
-                          <Image Grid.Row="1" Grid.RowSpan="8" Grid.Column="4" Stretch="Uniform" Source="{Binding Path=NalogURadu.Slika1,Converter={StaticResource SlikaToPunaPutanjaKonverter}}" MaxHeight="150">
+                          <Image Grid.Row="1" Grid.RowSpan="8" Grid.Column="4" Stretch="Uniform" Source="{Binding Path=NalogURadu.Slika1,Converter={StaticResource SlikaToPunaPutanjaKonverter}}" MaxHeight="150" Margin="0,0,7,0">
                             <Image.InputBindings>
                               <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType=UserControl}, Path=DataContext.SlikaCommand}" >
                                 <MouseBinding.CommandParameter>

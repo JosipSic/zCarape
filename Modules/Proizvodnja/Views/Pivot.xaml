@@ -130,7 +130,7 @@
                 </vm:ValueSelectorItem>
                 <!--#endregion-->
             </dxe:ComboBoxEdit>
-            <dxe:ComboBoxEdit Name="cbIzborZaDijagram" IsTextEditable="True" SelectedIndex="0" Margin="5,0,0,0" VerticalAlignment="Center">
+            <dxe:ComboBoxEdit Name="cbIzborZaDijagram" IsTextEditable="False" SelectedIndex="0" Margin="5,0,0,0" VerticalAlignment="Center">
                 <dxe:ComboBoxEditItem Content="Cela tabela"/>
                 <dxe:ComboBoxEditItem Content="Selektovani deo"/>
             </dxe:ComboBoxEdit>
@@ -156,7 +156,7 @@
       </dxlc:LayoutGroup>
 
       <dxlc:LayoutGroup Name="chartLayoutGroup" dxlc:LayoutControl.AllowVerticalSizing="True" dxlc:LayoutControl.AllowHorizontalSizing="True" Visibility="{Binding ElementName=chkDijagram, Path=IsChecked, Mode=OneWay, Converter={dx:BooleanToVisibilityConverter}}">
-        <dxc:ChartControl DataSource="{Binding ElementName=PivotGrid, Path=ChartDataSource}" CrosshairEnabled="True" >
+        <dxc:ChartControl DataSource="{Binding ElementName=PivotGrid, Path=ChartDataSource}" CrosshairEnabled="True" CustomDrawCrosshair="ChartControl_CustomDrawCrosshair">
         <dxc:ChartControl.Diagram>
             <dxc:XYDiagram2D SeriesDataMember="Series" SeriesTemplate="{Binding ElementName=cbChartType, Path=EditValue}">
             <!--<dxc:XYDiagram2D.SeriesTemplate>

@@ -116,8 +116,11 @@ namespace zCarape.Services.Interfaces
 
         #region Lica
 
+        IEnumerable<Lice> GetAllLica(bool samoAktivna=false);
         IEnumerable<Lice> GetAllAktivnaLica();
-
+        long InsertOrUpdateLice(Lice lice);
+        bool LiceImaZavisneZapise(long id);
+        bool DeleteLice(long id);
         #endregion
     }
 }

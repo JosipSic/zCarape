@@ -45,10 +45,6 @@ namespace Proizvodnja.ViewModels
             _dbService = dbService;
             FormirajSpisakMasina();
         }
-        public MasineViewModel()
-        {
-
-        }
         #endregion
 
         #region Command

@@ -26,7 +26,9 @@
               Command="{Binding NavigateCommand}" CommandParameter="Artikli" ContentTemplate="{StaticResource ResourceKey=NavStyle}"/>
       <dxb:BarButtonItem Content="Mašine" Margin="4,0,0,0" 
               Command="{Binding NavigateCommand}" CommandParameter="Masine" ContentTemplate="{StaticResource ResourceKey=NavStyle}" />
-      <dxb:BarSubItem Content="Izveštaji" Margin="4,0,0,0" ContentTemplate="{StaticResource ResourceKey=NavStyle}">
+       <dxb:BarButtonItem Content="Radnici" Margin="4,0,0,0" 
+              Command="{Binding NavigateCommand}" CommandParameter="Lica" ContentTemplate="{StaticResource ResourceKey=NavStyle}" />
+     <dxb:BarSubItem Content="Izveštaji" Margin="4,0,0,0" ContentTemplate="{StaticResource ResourceKey=NavStyle}">
         <dxb:BarButtonItem Content="Spisak predajnica sa grupisanjem"  Glyph="{dx:DXImage 'SvgImages/Spreadsheet/GrandTotalsOnRowsColumnsPivotTable.svg'}" BarItemDisplayMode="ContentAndGlyph"
               Command="{Binding NavigateCommand}" CommandParameter="Izvestaji" ContentTemplate="{StaticResource ResourceKey=NavStyle}" />
         <dxb:BarButtonItem Content="Pivot izveštaj"  Glyph="{dx:DXImage 'SvgImages/Dashboards/Pivot.svg'}" BarItemDisplayMode="ContentAndGlyph"
